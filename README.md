@@ -31,4 +31,4 @@ This repository ships with a GitHub Actions workflow that builds the Vite projec
 
 ## Additional documentation
 
-The full game design brief lives in [`docs/FLOWGRID_SPEC.md`](docs/FLOWGRID_SPEC.md).
+The full game design brief lives in [`docs-src/FLOWGRID_SPEC.md`](docs-src/FLOWGRID_SPEC.md).

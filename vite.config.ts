@@ -4,7 +4,6 @@ export default defineConfig({
   base: './',
   build: {
     outDir: 'docs',
-    emptyOutDir: false,
     assetsDir: '',
     rollupOptions: {
       output: {
