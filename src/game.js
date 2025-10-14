@@ -1,6 +1,10 @@
-import type { Faction, GameConfig, LevelDefinition, LinkState, NodeState } from './types';
+/** @typedef {import('./types.js').Faction} Faction */
+/** @typedef {import('./types.js').GameConfig} GameConfig */
+/** @typedef {import('./types.js').LevelDefinition} LevelDefinition */
+/** @typedef {import('./types.js').LinkState} LinkState */
+/** @typedef {import('./types.js').NodeState} NodeState */
 
-const FACTION_COLORS: Record<Faction, string> = {
+const FACTION_COLORS = {
   player: '#2563eb',
   ai: '#dc2626',
   neutral: '#9ca3af',
@@ -8,77 +12,78 @@ const FACTION_COLORS: Record<Faction, string> = {
 
 const FRIENDLY_OUTLINE = '#0f172a';
 
-function distance(ax: number, ay: number, bx: number, by: number): number {
+function distance(ax, ay, bx, by) {
   const dx = ax - bx;
   const dy = ay - by;
   return Math.hypot(dx, dy);
 }
 
-function clamp(value: number, min: number, max: number): number {
+function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-type PointerState = {
-  x: number;
-  y: number;
-  hoverNode: NodeState | null;
-  dragSource: NodeState | null;
-  isDragging: boolean;
-};
-
 export class FlowgridGame {
-  private readonly canvas: HTMLCanvasElement;
-  private readonly ctx: CanvasRenderingContext2D;
-  private readonly config: GameConfig;
-  private readonly hudElements: {
-    title: HTMLElement;
-    legend: HTMLElement;
-    prompt: HTMLElement;
-    pauseIndicator: HTMLElement;
-    endScreen: HTMLDivElement;
-    endHeadline: HTMLHeadingElement;
-    restartButton: HTMLButtonElement;
-  };
-
-  private readonly nodes = new Map<string, NodeState>();
-  private readonly links = new Map<string, LinkState>();
-  private readonly outgoingByNode = new Map<string, LinkState[]>();
-  private readonly incomingByNode = new Map<string, LinkState[]>();
-
-  private pointer: PointerState = {
-    x: 0,
-    y: 0,
-    hoverNode: null,
-    dragSource: null,
-    isDragging: false,
-  };
-
-  private accumulator = 0;
-  private lastTimestamp = 0;
-  private animationFrame = 0;
-  private paused = false;
-  private winner: Faction | null = null;
-  private lastCreatedLink: LinkState | null = null;
-  private tutorialShown = false;
-  private aiCooldown = 0;
-  private readonly initialLevel: LevelDefinition;
-
-  constructor(
-    canvas: HTMLCanvasElement,
-    hudElements: FlowgridGame['hudElements'],
-    level: LevelDefinition,
-    config: GameConfig,
-  ) {
+  /**
+   * @param {HTMLCanvasElement} canvas
+   * @param {{
+   *   title: HTMLElement;
+   *   legend: HTMLElement;
+   *   prompt: HTMLElement;
+   *   pauseIndicator: HTMLElement;
+   *   endScreen: HTMLDivElement;
+   *   endHeadline: HTMLHeadingElement;
+   *   restartButton: HTMLButtonElement;
+   * }} hudElements
+   * @param {LevelDefinition} level
+   * @param {GameConfig} config
+   */
+  constructor(canvas, hudElements, level, config) {
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Canvas 2D context not available.');
     }
 
+    /** @type {HTMLCanvasElement} */
     this.canvas = canvas;
+    /** @type {CanvasRenderingContext2D} */
     this.ctx = context;
     this.hudElements = hudElements;
     this.initialLevel = level;
     this.config = config;
+
+    this.nodes = new Map();
+    this.links = new Map();
+    this.outgoingByNode = new Map();
+    this.incomingByNode = new Map();
+
+    this.pointer = { x: 0, y: 0, hoverNode: null, dragSource: null, isDragging: false };
+    this.accumulator = 0;
+    this.lastTimestamp = 0;
+    this.animationFrame = 0;
+    this.paused = false;
+    /** @type {Faction | null} */
+    this.winner = null;
+    /** @type {LinkState | null} */
+    this.lastCreatedLink = null;
+    this.tutorialShown = false;
+    this.aiCooldown = 0;
+
+    this.loop = (timestamp) => {
+      const delta = (timestamp - this.lastTimestamp) / 1000;
+      this.lastTimestamp = timestamp;
+
+      if (!this.paused && !this.winner) {
+        this.accumulator += delta;
+        const step = this.config.fixedStep;
+        while (this.accumulator >= step) {
+          this.update(step);
+          this.accumulator -= step;
+        }
+      }
+
+      this.render();
+      this.animationFrame = requestAnimationFrame(this.loop);
+    };
 
     this.canvas.width = level.width;
     this.canvas.height = level.height;
@@ -92,29 +97,12 @@ export class FlowgridGame {
     this.start();
   }
 
-  private start() {
+  start() {
     this.lastTimestamp = performance.now();
     this.animationFrame = requestAnimationFrame(this.loop);
   }
 
-  private loop = (timestamp: number) => {
-    const delta = (timestamp - this.lastTimestamp) / 1000;
-    this.lastTimestamp = timestamp;
-
-    if (!this.paused && !this.winner) {
-      this.accumulator += delta;
-      const step = this.config.fixedStep;
-      while (this.accumulator >= step) {
-        this.update(step);
-        this.accumulator -= step;
-      }
-    }
-
-    this.render();
-    this.animationFrame = requestAnimationFrame(this.loop);
-  };
-
-  private resetState() {
+  resetState() {
     this.nodes.clear();
     this.links.clear();
     this.outgoingByNode.clear();
@@ -128,7 +116,8 @@ export class FlowgridGame {
     this.aiCooldown = 0;
 
     for (const definition of this.initialLevel.nodes) {
-      const node: NodeState = {
+      /** @type {NodeState} */
+      const node = {
         ...definition,
         energy: definition.energy,
         outgoingLimit: this.config.outgoingLimit,
@@ -149,7 +138,7 @@ export class FlowgridGame {
     this.tutorialShown = false;
   }
 
-  private registerInput() {
+  registerInput() {
     this.canvas.addEventListener('pointermove', (event) => {
       const rect = this.canvas.getBoundingClientRect();
       this.pointer.x = ((event.clientX - rect.left) / rect.width) * this.canvas.width;
@@ -222,17 +211,17 @@ export class FlowgridGame {
     this.hudElements.restartButton.addEventListener('click', () => this.restart());
   }
 
-  private togglePause() {
+  togglePause() {
     this.paused = !this.paused;
     this.hudElements.pauseIndicator.style.display = this.paused ? 'block' : 'none';
     this.hudElements.pauseIndicator.textContent = 'Paused';
   }
 
-  private restart() {
+  restart() {
     this.resetState();
   }
 
-  private hitTestNode(x: number, y: number): NodeState | null {
+  hitTestNode(x, y) {
     for (const node of Array.from(this.nodes.values()).reverse()) {
       const dist = distance(x, y, node.x, node.y);
       if (dist <= node.radius + 6) {
@@ -242,8 +231,9 @@ export class FlowgridGame {
     return null;
   }
 
-  private deleteLinkAtPointer() {
-    let closest: { link: LinkState; dist: number } | null = null;
+  deleteLinkAtPointer() {
+    /** @type {{ link: LinkState; dist: number } | null} */
+    let closest = null;
     for (const link of this.links.values()) {
       if (link.owner !== 'player') continue;
       const source = this.nodes.get(link.sourceId);
@@ -261,7 +251,7 @@ export class FlowgridGame {
     }
   }
 
-  private createLink(sourceId: string, targetId: string) {
+  createLink(sourceId, targetId) {
     const source = this.nodes.get(sourceId);
     const target = this.nodes.get(targetId);
     if (!source || !target) return;
@@ -289,7 +279,8 @@ export class FlowgridGame {
     const length = distance(source.x, source.y, target.x, target.y);
     const efficiency = clamp(1 - length * this.config.distanceLoss, this.config.efficiencyFloor, 1);
 
-    const link: LinkState = {
+    /** @type {LinkState} */
+    const link = {
       id: `${sourceId}->${targetId}`,
       sourceId,
       targetId,
@@ -314,7 +305,7 @@ export class FlowgridGame {
     this.lastCreatedLink = link;
   }
 
-  private applySharePreset(link: LinkState, fraction: number) {
+  applySharePreset(link, fraction) {
     const sourceLinks = this.outgoingByNode.get(link.sourceId);
     if (!sourceLinks) return;
     if (!sourceLinks.includes(link)) return;
@@ -333,7 +324,7 @@ export class FlowgridGame {
     }
   }
 
-  private removeLink(id: string) {
+  removeLink(id) {
     const link = this.links.get(id);
     if (!link) return;
     const outgoing = this.outgoingByNode.get(link.sourceId);
@@ -363,13 +354,14 @@ export class FlowgridGame {
     }
   }
 
-  private update(dt: number) {
+  update(dt) {
     // Regenerate energy
     for (const node of this.nodes.values()) {
       node.energy = Math.min(node.capacity, node.energy + node.regen * dt);
     }
 
-    const aggressor: Record<string, Faction | null> = {};
+    /** @type {Record<string, Faction | null>} */
+    const aggressor = {};
 
     for (const [nodeId, outgoing] of this.outgoingByNode) {
       const node = this.nodes.get(nodeId);
@@ -425,7 +417,7 @@ export class FlowgridGame {
     this.checkVictory();
   }
 
-  private captureNode(node: NodeState, newOwner: Faction) {
+  captureNode(node, newOwner) {
     node.owner = newOwner;
     node.energy = this.config.captureSeed;
 
@@ -435,7 +427,7 @@ export class FlowgridGame {
     }
   }
 
-  private runAiTurn() {
+  runAiTurn() {
     const aiNodes = Array.from(this.nodes.values()).filter((node) => node.owner === 'ai');
     for (const source of aiNodes) {
       const surplus = source.energy - source.safetyReserve;
@@ -453,7 +445,8 @@ export class FlowgridGame {
         .filter((node) => node.id !== source.id && distance(node.x, node.y, source.x, source.y) <= this.config.maxLinkDistance)
         .sort((a, b) => distance(source.x, source.y, a.x, a.y) - distance(source.x, source.y, b.x, b.y));
 
-      let chosen: NodeState | null = null;
+      /** @type {NodeState | null} */
+      let chosen = null;
 
       const neutralPriority = candidates.filter((node) => node.owner === 'neutral' && node.energy < surplus);
       if (neutralPriority.length > 0) {
@@ -475,12 +468,13 @@ export class FlowgridGame {
     }
   }
 
-  private trimAiLinksIfWeak(node: NodeState) {
+  trimAiLinksIfWeak(node) {
     const outgoing = this.outgoingByNode.get(node.id);
     if (!outgoing || outgoing.length === 0) return;
     if (node.energy > node.safetyReserve + 5) return;
 
-    let longest: LinkState | null = null;
+    /** @type {LinkState | null} */
+    let longest = null;
     for (const link of outgoing) {
       if (!longest || link.length > longest.length) {
         longest = link;
@@ -491,7 +485,7 @@ export class FlowgridGame {
     }
   }
 
-  private checkVictory() {
+  checkVictory() {
     const playerOwnsAll = Array.from(this.nodes.values()).every((node) => node.owner === 'player');
     if (playerOwnsAll) {
       this.setWinner('player');
@@ -504,14 +498,14 @@ export class FlowgridGame {
     }
   }
 
-  private setWinner(faction: Faction) {
+  setWinner(faction) {
     this.winner = faction;
     this.paused = true;
     this.hudElements.endScreen.style.display = 'flex';
     this.hudElements.endHeadline.textContent = faction === 'player' ? 'Network Secured' : 'Network Compromised';
   }
 
-  private render() {
+  render() {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.fillStyle = '#f6f3ef';
