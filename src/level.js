@@ -1,6 +1,4 @@
-import type { LevelDefinition } from './types';
-
-export const levelOne: LevelDefinition = {
+export const levelOne = {
   id: 'flowgrid-level-1',
   width: 1280,
   height: 720,

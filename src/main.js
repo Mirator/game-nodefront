@@ -1,9 +1,8 @@
-import './style.css';
-import { FlowgridGame } from './game';
-import { levelOne } from './level';
-import type { GameConfig } from './types';
+import { FlowgridGame } from './game.js';
+import { levelOne } from './level.js';
 
-const app = document.querySelector<HTMLDivElement>('#app');
+/** @type {HTMLDivElement | null} */
+const app = document.querySelector('#app');
 if (!app) {
   throw new Error('App root not found');
 }
@@ -44,7 +43,8 @@ endScreen.appendChild(restartButton);
 endScreen.style.display = 'none';
 container.appendChild(endScreen);
 
-const config: GameConfig = {
+/** @type {import('./types.js').GameConfig} */
+const config = {
   fixedStep: 1 / 60,
   maxLinkDistance: 380,
   distanceLoss: 0.001,
