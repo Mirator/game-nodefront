@@ -4,6 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Flowgrid MVP</title>
+    <script>
+      (function ensureTrailingSlash() {
+        const { pathname, search, hash } = window.location;
+        if (
+          pathname !== '/' &&
+          !pathname.endsWith('/') &&
+          !pathname.split('/').pop()?.includes('.')
+        ) {
+          const normalizedPath = `${pathname}/`;
+          window.location.replace(`${normalizedPath}${search}${hash}`);
+        }
+      })();
+    </script>
     <script type="module" crossorigin src="./index.js"></script>
     <link rel="stylesheet" crossorigin href="./index.css">
   </head>
