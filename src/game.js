@@ -26,6 +26,25 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function hexToRgba(hex, alpha) {
+  const normalized = hex.replace('#', '');
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (normalized.length === 3) {
+    r = parseInt(normalized[0] + normalized[0], 16);
+    g = parseInt(normalized[1] + normalized[1], 16);
+    b = parseInt(normalized[2] + normalized[2], 16);
+  } else if (normalized.length === 6) {
+    r = parseInt(normalized.slice(0, 2), 16);
+    g = parseInt(normalized.slice(2, 4), 16);
+    b = parseInt(normalized.slice(4, 6), 16);
+  }
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export class FlowgridGame {
   /**
    * @param {HTMLCanvasElement} canvas
@@ -580,10 +599,17 @@ export class FlowgridGame {
 
     for (const node of this.nodes.values()) {
       const color = FACTION_COLORS[node.owner];
+      ctx.save();
+
+      ctx.shadowColor = hexToRgba(color, 0.45);
+      ctx.shadowBlur = node.radius * 1.6;
       ctx.fillStyle = '#f1ece6';
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.radius + 4, 0, Math.PI * 2);
       ctx.fill();
+
+      ctx.shadowColor = 'rgba(0,0,0,0)';
+      ctx.shadowBlur = 0;
 
       ctx.strokeStyle = node.owner === 'player' ? FRIENDLY_OUTLINE : '#1f2933';
       ctx.lineWidth = this.pointer.hoverNode?.id === node.id ? 3 : 1.5;
@@ -591,7 +617,18 @@ export class FlowgridGame {
       ctx.arc(node.x, node.y, node.radius + 1, 0, Math.PI * 2);
       ctx.stroke();
 
-      ctx.fillStyle = color;
+      const bodyGradient = ctx.createRadialGradient(
+        node.x,
+        node.y,
+        Math.max(2, node.radius * 0.2),
+        node.x,
+        node.y,
+        node.radius
+      );
+      bodyGradient.addColorStop(0, 'rgba(255,255,255,0.85)');
+      bodyGradient.addColorStop(0.7, hexToRgba(color, 0.95));
+      bodyGradient.addColorStop(1, color);
+      ctx.fillStyle = bodyGradient;
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -615,6 +652,8 @@ export class FlowgridGame {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(Math.round(node.energy).toString(), node.x, node.y);
+
+      ctx.restore();
     }
   }
 }
