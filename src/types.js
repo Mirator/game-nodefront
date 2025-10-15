@@ -43,6 +43,7 @@
  * @property {Faction} owner
  * @property {number} maxRate
  * @property {number} smoothedRate
+ * @property {number} dashOffset
  */
 
 /**

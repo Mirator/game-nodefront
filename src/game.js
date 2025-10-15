@@ -12,6 +12,10 @@ const FACTION_COLORS = {
 
 const FRIENDLY_OUTLINE = '#0f172a';
 
+const LINK_DASH_PATTERN = [12, 8];
+const LINK_DASH_CYCLE = LINK_DASH_PATTERN[0] + LINK_DASH_PATTERN[1];
+const LINK_DASH_SPEED = 60;
+
 function distance(ax, ay, bx, by) {
   const dx = ax - bx;
   const dy = ay - by;
@@ -290,6 +294,7 @@ export class FlowgridGame {
       owner: source.owner,
       maxRate: this.config.linkMaxRate,
       smoothedRate: 0,
+      dashOffset: 0,
     };
 
     this.links.set(link.id, link);
@@ -348,6 +353,8 @@ export class FlowgridGame {
         incoming.splice(index, 1);
       }
     }
+    link.dashOffset = 0;
+    link.smoothedRate = 0;
     this.links.delete(id);
     if (this.lastCreatedLink?.id === id) {
       this.lastCreatedLink = null;
@@ -367,20 +374,33 @@ export class FlowgridGame {
       const node = this.nodes.get(nodeId);
       if (!node) continue;
       if (outgoing.length === 0) continue;
-      if (node.energy <= node.safetyReserve) continue;
+      if (node.energy <= node.safetyReserve) {
+        for (const link of outgoing) {
+          link.smoothedRate *= 0.8;
+        }
+        continue;
+      }
 
       const available = Math.max(0, node.energy - node.safetyReserve);
       if (available <= 0) continue;
 
       const shareSum = outgoing.reduce((acc, link) => acc + link.share, 0);
-      if (shareSum <= 0) continue;
+      if (shareSum <= 0) {
+        for (const link of outgoing) {
+          link.smoothedRate *= 0.8;
+        }
+        continue;
+      }
 
       for (const link of outgoing) {
         const shareFraction = link.share / shareSum;
         const intendedRate = available * shareFraction;
         const rate = Math.min(link.maxRate, intendedRate);
         const transfer = rate * dt;
-        if (transfer <= 0) continue;
+        if (transfer <= 0) {
+          link.smoothedRate = link.smoothedRate * 0.8;
+          continue;
+        }
 
         node.energy = Math.max(0, node.energy - transfer);
 
@@ -396,6 +416,21 @@ export class FlowgridGame {
         }
 
         link.smoothedRate = link.smoothedRate * 0.8 + rate * 0.2;
+      }
+    }
+
+    for (const link of this.links.values()) {
+      const normalized = link.maxRate > 0 ? clamp(link.smoothedRate / link.maxRate, 0, 1) : 0;
+      if (normalized <= 0.01) {
+        link.smoothedRate = 0;
+        link.dashOffset = 0;
+        continue;
+      }
+
+      const delta = normalized * LINK_DASH_SPEED * dt;
+      link.dashOffset -= delta;
+      if (link.dashOffset <= -LINK_DASH_CYCLE) {
+        link.dashOffset += LINK_DASH_CYCLE;
       }
     }
 
@@ -511,6 +546,7 @@ export class FlowgridGame {
     ctx.fillStyle = '#f6f3ef';
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
+    ctx.setLineDash(LINK_DASH_PATTERN);
     for (const link of this.links.values()) {
       const source = this.nodes.get(link.sourceId);
       const target = this.nodes.get(link.targetId);
@@ -520,21 +556,26 @@ export class FlowgridGame {
       const thickness = 2 + clamp(link.smoothedRate / link.maxRate, 0, 1) * 6;
       ctx.lineWidth = thickness;
       ctx.lineCap = 'round';
+      ctx.lineDashOffset = link.dashOffset;
       ctx.beginPath();
       ctx.moveTo(source.x, source.y);
       ctx.lineTo(target.x, target.y);
       ctx.stroke();
     }
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
 
     if (this.pointer.isDragging && this.pointer.dragSource) {
       ctx.strokeStyle = '#64748b';
       ctx.lineWidth = 2;
       ctx.setLineDash([6, 6]);
+      ctx.lineDashOffset = 0;
       ctx.beginPath();
       ctx.moveTo(this.pointer.dragSource.x, this.pointer.dragSource.y);
       ctx.lineTo(this.pointer.x, this.pointer.y);
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.lineDashOffset = 0;
     }
 
     for (const node of this.nodes.values()) {
