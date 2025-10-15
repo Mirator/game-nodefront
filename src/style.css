@@ -51,6 +51,7 @@ canvas {
   font-size: 14px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  pointer-events: none;
 }
 
 .legend {
@@ -61,6 +62,7 @@ canvas {
   gap: 12px;
   font-size: 12px;
   text-transform: uppercase;
+  pointer-events: none;
 }
 
 .legend span::before {
@@ -93,6 +95,7 @@ canvas {
   font-size: 16px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  pointer-events: none;
 }
 
 .pause-indicator {
@@ -102,6 +105,7 @@ canvas {
   font-size: 12px;
   letter-spacing: 0.1em;
   opacity: 0.7;
+  pointer-events: none;
 }
 
 .end-screen {
