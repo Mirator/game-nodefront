@@ -419,9 +419,10 @@ export class FlowgridGame {
   }
 
   update(dt) {
+    const regenMultiplier = this.config.regenRateMultiplier ?? 1;
     // Regenerate energy
     for (const node of this.nodes.values()) {
-      node.energy = Math.min(node.capacity, node.energy + node.regen * dt);
+      node.energy = Math.min(node.capacity, node.energy + node.regen * dt * regenMultiplier);
     }
 
     /** @type {Record<string, Faction | null>} */
