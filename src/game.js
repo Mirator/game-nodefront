@@ -90,6 +90,9 @@ export class FlowgridGame {
     this.lastCreatedLink = null;
     this.tutorialShown = false;
     this.aiCooldown = 0;
+    this.promptLastMessage = '';
+    this.promptLastVariant = 'normal';
+    this.promptTimeout = 0;
 
     this.loop = (timestamp) => {
       const delta = (timestamp - this.lastTimestamp) / 1000;
@@ -154,11 +157,43 @@ export class FlowgridGame {
       this.incomingByNode.set(node.id, []);
     }
 
-    this.hudElements.prompt.textContent =
-      'Drag from a blue node to capture neutrals. Right-click links to remove.';
+    this.setPrompt('Drag from a blue node to capture neutrals. Right-click links to remove.');
     this.hudElements.pauseIndicator.style.display = 'none';
     this.hudElements.endScreen.style.display = 'none';
     this.tutorialShown = false;
+  }
+
+  applyPrompt(message, variant) {
+    const prompt = this.hudElements.prompt;
+    prompt.textContent = message;
+    if (variant === 'warning') {
+      prompt.classList.add('warning');
+    } else {
+      prompt.classList.remove('warning');
+    }
+  }
+
+  clearPromptTimeout() {
+    if (this.promptTimeout) {
+      window.clearTimeout(this.promptTimeout);
+      this.promptTimeout = 0;
+    }
+  }
+
+  setPrompt(message, variant = 'normal') {
+    this.clearPromptTimeout();
+    this.promptLastMessage = message;
+    this.promptLastVariant = variant;
+    this.applyPrompt(message, variant);
+  }
+
+  showTemporaryPrompt(message, variant = 'normal', duration = 2000) {
+    this.clearPromptTimeout();
+    this.applyPrompt(message, variant);
+    this.promptTimeout = window.setTimeout(() => {
+      this.applyPrompt(this.promptLastMessage, this.promptLastVariant);
+      this.promptTimeout = 0;
+    }, duration);
   }
 
   registerInput() {
@@ -183,7 +218,7 @@ export class FlowgridGame {
         this.pointer.dragSource = node;
         this.pointer.isDragging = true;
         if (!this.tutorialShown) {
-          this.hudElements.prompt.textContent = 'Shorter routes transfer energy faster.';
+          this.setPrompt('Shorter routes transfer energy faster.');
           this.tutorialShown = true;
         }
       }
@@ -289,7 +324,11 @@ export class FlowgridGame {
     if (sourceId === targetId) return;
     if (this.links.has(`${sourceId}->${targetId}`)) return;
 
-    if (distance(source.x, source.y, target.x, target.y) > this.config.maxLinkDistance) {
+    const length = distance(source.x, source.y, target.x, target.y);
+    if (length > this.config.maxLinkDistance) {
+      if (source.owner === 'player') {
+        this.showTemporaryPrompt('Target out of range.', 'warning');
+      }
       return;
     }
 
@@ -299,7 +338,6 @@ export class FlowgridGame {
       return;
     }
 
-    const length = distance(source.x, source.y, target.x, target.y);
     const speedFactor = clamp(1 - length * this.config.distanceLoss, this.config.efficiencyFloor, 1);
 
     /** @type {LinkState} */

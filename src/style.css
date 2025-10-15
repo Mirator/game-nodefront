@@ -98,6 +98,10 @@ canvas {
   pointer-events: none;
 }
 
+.prompt.warning {
+  color: #dc2626;
+}
+
 .pause-indicator {
   position: absolute;
   top: 48px;
