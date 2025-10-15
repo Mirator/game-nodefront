@@ -39,7 +39,7 @@
  * @property {string} targetId
  * @property {number} share
  * @property {number} length
- * @property {number} efficiency
+ * @property {number} efficiency - Ratio of energy delivered to the target (constant in MVP).
  * @property {Faction} owner
  * @property {number} maxRate
  * @property {number} smoothedRate
@@ -50,8 +50,8 @@
  * @typedef {Object} GameConfig
  * @property {number} fixedStep
  * @property {number} maxLinkDistance
- * @property {number} distanceLoss
- * @property {number} efficiencyFloor
+ * @property {number} distanceLoss - Rate reduction per pixel of link length.
+ * @property {number} efficiencyFloor - Minimum rate multiplier applied to long links.
  * @property {number} captureSeed
  * @property {number} safetyReserve
  * @property {number} outgoingLimit

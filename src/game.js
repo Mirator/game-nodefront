@@ -183,7 +183,7 @@ export class FlowgridGame {
         this.pointer.dragSource = node;
         this.pointer.isDragging = true;
         if (!this.tutorialShown) {
-          this.hudElements.prompt.textContent = 'Shorter routes are more efficient.';
+          this.hudElements.prompt.textContent = 'Shorter routes transfer energy faster.';
           this.tutorialShown = true;
         }
       }
@@ -300,7 +300,7 @@ export class FlowgridGame {
     }
 
     const length = distance(source.x, source.y, target.x, target.y);
-    const efficiency = clamp(1 - length * this.config.distanceLoss, this.config.efficiencyFloor, 1);
+    const speedFactor = clamp(1 - length * this.config.distanceLoss, this.config.efficiencyFloor, 1);
 
     /** @type {LinkState} */
     const link = {
@@ -309,9 +309,9 @@ export class FlowgridGame {
       targetId,
       share: 1,
       length,
-      efficiency,
+      efficiency: 1,
       owner: source.owner,
-      maxRate: this.config.linkMaxRate,
+      maxRate: this.config.linkMaxRate * speedFactor,
       smoothedRate: 0,
       dashOffset: 0,
     };
