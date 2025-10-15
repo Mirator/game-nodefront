@@ -14,7 +14,7 @@
 
 **Design pillars**
 1. **Clarity over complexity** — minimal shapes, bold colors, no clutter; decisions are legible at a glance.  
-2. **Tactile flow** — connections feel like living routes; longer lines lose efficiency; geometry matters.  
+2. **Tactile flow** — connections feel like living routes; longer lines slow throughput; geometry matters.
 3. **Calm tension** — gentle, almost meditative pacing that nevertheless demands smart timing and expansion.  
 4. **Determinism** — fixed simulation rules produce predictable outcomes, rewarding planning over twitch.  
 5. **Short sessions** — 5–10 minutes per match, fast restarts, low friction.
@@ -30,7 +30,7 @@
 
 - **Nodes** (stations/servers) generate **flow energy** over time.  
 - Players **connect** their nodes to others using **links** (straight or curved lines).  
-- Links transmit energy. Shorter links are more efficient; longer links leak energy.  
+- Links transmit energy. Shorter links move energy faster; longer links slow the transfer without wasting energy.
 - If incoming hostile energy depletes a node to zero, the node **flips ownership** and joins the attacker.  
 - The game ends when one faction **controls all nodes** (domination) or a mode-specific condition is met.
 
@@ -55,16 +55,16 @@
 ### 4.1 Entities & Terminology
 
 - **Node**: A circular station with a position, an owner (player/AI/neutral), energy, capacity, regeneration rate, radius (for visuals and hit‑testing), and a limit on simultaneous outgoing links.  
-- **Link**: A directed connection from one node (source) to another (target) that continuously moves energy. Each link has a share (its portion of the source’s outflow), a maximum transfer rate, a geometric length, and an effective efficiency based on length.  
+- **Link**: A directed connection from one node (source) to another (target) that continuously moves energy. Each link has a share (its portion of the source’s outflow), a maximum transfer rate that scales with its geometric length, and the stored length for visuals and AI heuristics.
 - **Faction**: A color‑coded side (Player, AI). The player has no autonomous logic; the AI faction uses heuristics.  
 - **Game State**: The authoritative collection of nodes, links, factions, selection/hover state, timers, RNG, and current level metadata.
 
 ### 4.2 Systems (Conceptual)
 
-- **Energy System**: Per fixed tick, each node regenerates energy up to its capacity. It calculates available outflow beyond a safety reserve and distributes it across outgoing links according to per‑link share. Links apply distance‑based efficiency; sources pay pre‑loss, targets receive post‑loss. Friendly targets are reinforced; hostile targets are damaged.  
+- **Energy System**: Per fixed tick, each node regenerates energy up to its capacity. It calculates available outflow beyond a safety reserve and distributes it across outgoing links according to per‑link share. Links slow their maximum transfer rate as they lengthen but do not waste energy. Friendly targets are reinforced; hostile targets are damaged.
 - **Capture System**: If a node’s energy reaches zero from hostile incoming flow, ownership flips to the attacker; the node is reseeded to a low starting energy and enemy links from it are cut.  
 - **Link System**: Enforces per‑node link limits, ensures shares across a source sum to at most 100%, prevents duplicate/illegal links, and clamps distances.  
-- **AI System**: For the MVP, a simple, deterministic policy: when a node has surplus, attempt short, efficient attacks on the nearest weak neutral/enemy within range; prefer targets that shorten the front and avoid overextension.  
+- **AI System**: For the MVP, a simple, deterministic policy: when a node has surplus, attempt short, fast attacks on the nearest weak neutral/enemy within range; prefer targets that shorten the front and avoid overextension.
 - **Victory System**: Checks global ownership; on player control of all nodes → “Win”; on AI control of all nodes → “Loss”.  
 - **Input System**: Pointer hover/select, drag to create link, right‑click to delete link, hotkeys (pause, restart, share presets).  
 - **Render System**: Draws background, links (thickness indicating rate), nodes (fill indicating energy), selection/hover effects, HUD and end screens.
@@ -88,10 +88,10 @@
   - Safety reserve (un-sendable buffer): **10 units**  
   - Radius: **16–18 px** (affects hit area and aesthetic weight)
 
-- **Link defaults**  
-  - Maximum transfer rate per link: **20 units/second**  
-  - Distance efficiency loss: **0.001 per pixel of link length**  
-  - Minimum efficiency floor: **35%** (prevents ultra-long links from stalling entirely)  
+- **Link defaults**
+  - Maximum transfer rate per link: **20 units/second**
+  - Distance speed penalty: **0.001 per pixel of link length**
+  - Minimum speed floor: **35%** (prevents ultra-long links from stalling entirely)
   - Maximum legal distance for creating a link: **380 px**  
   - Visual thickness: proportional to current transfer rate
 
@@ -234,7 +234,7 @@
 ### 14.1 Deliverables Checklist
 
 - Load Level 1 with the exact node table above.  
-- Implement energy regen, distance-loss links, safety reserve, and per-node link limits.  
+- Implement energy regen, distance-based link speed scaling, safety reserve, and per-node link limits.
 - Create links by drag-and-drop; delete links via right-click.  
 - Show hover and selection states; show link thickness corresponding to flow.  
 - Implement capture flips with reseed energy and hostile link pruning.  
@@ -247,7 +247,7 @@
 
 1. **Scene & Rendering Skeleton** — canvas, background, camera, draw nodes/links statically.  
 2. **Input & Selection** — hover detection, drag from node A to node B; legal-link checks; deletion.  
-3. **Simulation Core** — per-tick regen; available outflow; distance-based link efficiency; energy transfers.  
+3. **Simulation Core** — per-tick regen; available outflow; distance-based link speed scaling; energy transfers.
 4. **Capture & Ownership** — depletion → flip → reseed → prune hostile links.  
 5. **AI MVP** — surplus detection and nearest-target attacks; simple reroute logic.  
 6. **Win/Lose & HUD** — end screens; restart; pause; legend.  
@@ -257,7 +257,7 @@
 ### 14.3 Acceptance Tests (manual)
 
 - **Link legality**: Cannot connect if target too far, if tentacle limit reached, or if link already exists.  
-- **Energy conservation**: Source energy decreases faster than target gains on long links; short links feel efficient.  
+- **Transfer pacing**: Source energy takes longer to arrive through long links; short links feel snappy.
 - **Capture**: Neutral flips after sustained pressure; on flip, ownership color updates and outgoing hostile links from that node vanish.  
 - **AI**: Expands to nearest neutral quickly; occasionally pressures a weakened player node; does not stall indefinitely.  
 - **Win state**: Achievable by capturing central neutrals first and cutting AI’s long routes.  
@@ -269,10 +269,10 @@
 
 ## 15. Roadmap Beyond MVP (Non-blocking)
 
-- **Special node types** (Relay/Hubs/Shield) that modify regeneration or efficiency.  
+- **Special node types** (Relay/Hubs/Shield) that modify regeneration or transfer speed.
 - **Weighted shares** UI to distribute a source’s outflow precisely among multiple links.  
 - **Multiple levels** with varied geometries and hazards.  
-- **Zen/Efficiency modes** that emphasize optimization instead of conquest.  
+- **Zen/Optimization modes** that emphasize optimization instead of conquest.
 - **Asynchronous challenges** (share a level seed and best time/turns).  
 - **UX skin packs** (neural theme, transit theme, energy grid theme).
 
@@ -295,7 +295,7 @@
 ## 17. Glossary (for implementers and AI agents)
 
 - **Energy**: The scalar resource that is both health and transferable flow.  
-- **Efficiency**: The proportion of energy that survives a link’s distance; longer = less efficient.  
+- **Efficiency**: The proportion of energy that survives a link; in the MVP it remains constant regardless of distance.
 - **Share**: The intended portion of a source node’s outflow assigned to a particular link.  
 - **Safety reserve**: Minimum energy a node tries to keep to avoid self-starvation.  
 - **Flip/Capture**: When hostile flow reduces a node’s energy to zero, ownership changes.
