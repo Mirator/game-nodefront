@@ -57,6 +57,7 @@
  * @property {number} outgoingLimit
  * @property {number} linkMaxRate
  * @property {number} surplusThreshold
+ * @property {number} regenRateMultiplier
  * @property {Record<string, number>} sharePresets
  */
 
