@@ -49,7 +49,6 @@
 /**
  * @typedef {Object} GameConfig
  * @property {number} fixedStep
- * @property {number} maxLinkDistance
  * @property {number} distanceLoss - Rate reduction per pixel of link length.
  * @property {number} efficiencyFloor - Minimum rate multiplier applied to long links.
  * @property {number} captureSeed

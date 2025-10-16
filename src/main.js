@@ -46,7 +46,6 @@ container.appendChild(endScreen);
 /** @type {import('./types.js').GameConfig} */
 const config = {
   fixedStep: 1 / 60,
-  maxLinkDistance: 380,
   distanceLoss: 0.001,
   efficiencyFloor: 0.35,
   captureSeed: 20,
