@@ -85,7 +85,6 @@ export class FlowgridGame {
       hoverNode: null,
       dragSource: null,
       isDragging: false,
-      isOutOfRange: false,
     };
     this.accumulator = 0;
     this.lastTimestamp = 0;
@@ -100,8 +99,6 @@ export class FlowgridGame {
     this.promptLastMessage = '';
     this.promptLastVariant = 'normal';
     this.promptTimeout = 0;
-    /** @type {{ message: string; variant: 'normal' | 'warning' } | null} */
-    this.dragPromptBackup = null;
 
     this.loop = (timestamp) => {
       const delta = (timestamp - this.lastTimestamp) / 1000;
@@ -149,14 +146,12 @@ export class FlowgridGame {
       hoverNode: null,
       dragSource: null,
       isDragging: false,
-      isOutOfRange: false,
     };
     this.accumulator = 0;
     this.lastTimestamp = performance.now();
     this.paused = false;
     this.winner = null;
     this.aiCooldown = 0;
-    this.dragPromptBackup = null;
 
     for (const definition of this.initialLevel.nodes) {
       /** @type {NodeState} */
@@ -213,48 +208,12 @@ export class FlowgridGame {
     }, duration);
   }
 
-  restoreDragPrompt() {
-    this.clearPromptTimeout();
-    if (this.dragPromptBackup) {
-      this.applyPrompt(this.dragPromptBackup.message, this.dragPromptBackup.variant);
-      this.dragPromptBackup = null;
-    } else {
-      this.applyPrompt(this.promptLastMessage, this.promptLastVariant);
-    }
-  }
-
   registerInput() {
     this.canvas.addEventListener('pointermove', (event) => {
       const rect = this.canvas.getBoundingClientRect();
       this.pointer.x = ((event.clientX - rect.left) / rect.width) * this.canvas.width;
       this.pointer.y = ((event.clientY - rect.top) / rect.height) * this.canvas.height;
       this.pointer.hoverNode = this.hitTestNode(this.pointer.x, this.pointer.y);
-
-      if (this.pointer.isDragging && this.pointer.dragSource) {
-        const length = distance(
-          this.pointer.dragSource.x,
-          this.pointer.dragSource.y,
-          this.pointer.x,
-          this.pointer.y,
-        );
-        const outOfRange = length > this.config.maxLinkDistance;
-        if (outOfRange && !this.pointer.isOutOfRange) {
-          if (!this.dragPromptBackup) {
-            this.dragPromptBackup = {
-              message: this.promptLastMessage,
-              variant: this.promptLastVariant,
-            };
-          }
-          this.clearPromptTimeout();
-          this.applyPrompt('Target out of range.', 'warning');
-        } else if (!outOfRange && this.pointer.isOutOfRange) {
-          this.restoreDragPrompt();
-        }
-        this.pointer.isOutOfRange = outOfRange;
-      } else if (this.pointer.isOutOfRange) {
-        this.pointer.isOutOfRange = false;
-        this.restoreDragPrompt();
-      }
     });
 
     this.canvas.addEventListener('pointerdown', (event) => {
@@ -270,10 +229,6 @@ export class FlowgridGame {
       if (node && node.owner === 'player') {
         this.pointer.dragSource = node;
         this.pointer.isDragging = true;
-        this.pointer.isOutOfRange = false;
-        if (this.dragPromptBackup) {
-          this.restoreDragPrompt();
-        }
         if (!this.tutorialShown) {
           this.setPrompt('Shorter routes transfer energy faster.');
           this.tutorialShown = true;
@@ -292,20 +247,12 @@ export class FlowgridGame {
           this.createLink(this.pointer.dragSource.id, target.id);
         }
       }
-      if (this.pointer.isOutOfRange) {
-        this.restoreDragPrompt();
-      }
-      this.pointer.isOutOfRange = false;
       this.pointer.dragSource = null;
       this.pointer.isDragging = false;
     });
 
     this.canvas.addEventListener('pointerleave', () => {
       this.pointer.hoverNode = null;
-      if (this.pointer.isOutOfRange) {
-        this.restoreDragPrompt();
-      }
-      this.pointer.isOutOfRange = false;
       this.pointer.dragSource = null;
       this.pointer.isDragging = false;
     });
@@ -390,9 +337,6 @@ export class FlowgridGame {
     if (this.links.has(`${sourceId}->${targetId}`)) return;
 
     const length = distance(source.x, source.y, target.x, target.y);
-    if (length > this.config.maxLinkDistance) {
-      return;
-    }
 
     const outgoing = this.outgoingByNode.get(sourceId);
     if (!outgoing) return;
@@ -597,7 +541,7 @@ export class FlowgridGame {
       }
 
       const candidates = Array.from(this.nodes.values())
-        .filter((node) => node.id !== source.id && distance(node.x, node.y, source.x, source.y) <= this.config.maxLinkDistance)
+        .filter((node) => node.id !== source.id)
         .sort((a, b) => distance(source.x, source.y, a.x, a.y) - distance(source.x, source.y, b.x, b.y));
 
       /** @type {NodeState | null} */
@@ -686,7 +630,7 @@ export class FlowgridGame {
     ctx.lineDashOffset = 0;
 
     if (this.pointer.isDragging && this.pointer.dragSource) {
-      ctx.strokeStyle = this.pointer.isOutOfRange ? '#dc2626' : '#64748b';
+      ctx.strokeStyle = '#64748b';
       ctx.lineWidth = 2;
       ctx.setLineDash([6, 6]);
       ctx.lineDashOffset = 0;
