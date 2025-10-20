@@ -15,11 +15,26 @@ const FRIENDLY_OUTLINE = '#0f172a';
 const LINK_DASH_PATTERN = [12, 8];
 const LINK_DASH_CYCLE = LINK_DASH_PATTERN[0] + LINK_DASH_PATTERN[1];
 const LINK_DASH_SPEED = 60;
+const LINK_BUILD_SPEED = 280;
+const LINK_BUILD_DASH_PATTERN = [4, 12];
 
 function distance(ax, ay, bx, by) {
   const dx = ax - bx;
   const dy = ay - by;
   return Math.hypot(dx, dy);
+}
+
+function distanceToSegment(px, py, ax, ay, bx, by) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  if (dx === 0 && dy === 0) {
+    return distance(px, py, ax, ay);
+  }
+  const t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);
+  const clampedT = clamp(t, 0, 1);
+  const closestX = ax + clampedT * dx;
+  const closestY = ay + clampedT * dy;
+  return distance(px, py, closestX, closestY);
 }
 
 // Helper to ensure pointer resets remain consistent across the codebase.
@@ -308,9 +323,10 @@ export class FlowgridGame {
       const source = this.nodes.get(link.sourceId);
       const target = this.nodes.get(link.targetId);
       if (!source || !target) continue;
-      const midX = (source.x + target.x) / 2;
-      const midY = (source.y + target.y) / 2;
-      const dist = distance(this.pointer.x, this.pointer.y, midX, midY);
+      const ratio = link.length > 0 ? clamp(link.buildProgress / link.length, 0, 1) : 1;
+      const endX = source.x + (target.x - source.x) * ratio;
+      const endY = source.y + (target.y - source.y) * ratio;
+      const dist = distanceToSegment(this.pointer.x, this.pointer.y, source.x, source.y, endX, endY);
       if (dist < 18 && (!closest || dist < closest.dist)) {
         closest = { link, dist };
       }
@@ -357,6 +373,8 @@ export class FlowgridGame {
       maxRate: this.config.linkMaxRate * speedFactor,
       smoothedRate: 0,
       dashOffset: 0,
+      buildProgress: 0,
+      establishing: true,
     };
 
     this.links.set(link.id, link);
@@ -430,6 +448,17 @@ export class FlowgridGame {
       node.energy = Math.min(node.capacity, node.energy + node.regen * dt * regenMultiplier);
     }
 
+    for (const link of this.links.values()) {
+      if (!link.establishing) continue;
+      const progress = link.buildProgress + LINK_BUILD_SPEED * dt;
+      if (progress >= link.length || link.length === 0) {
+        link.buildProgress = link.length;
+        link.establishing = false;
+      } else {
+        link.buildProgress = progress;
+      }
+    }
+
     /** @type {Record<string, Faction | null>} */
     const aggressor = {};
 
@@ -447,7 +476,7 @@ export class FlowgridGame {
       const available = Math.max(0, node.energy - node.safetyReserve);
       if (available <= 0) continue;
 
-      const shareSum = outgoing.reduce((acc, link) => acc + link.share, 0);
+      const shareSum = outgoing.reduce((acc, link) => (link.establishing ? acc : acc + link.share), 0);
       if (shareSum <= 0) {
         for (const link of outgoing) {
           link.smoothedRate *= 0.8;
@@ -456,6 +485,10 @@ export class FlowgridGame {
       }
 
       for (const link of outgoing) {
+        if (link.establishing) {
+          link.smoothedRate = link.smoothedRate * 0.8;
+          continue;
+        }
         const shareFraction = link.share / shareSum;
         const intendedRate = available * shareFraction;
         const rate = Math.min(link.maxRate, intendedRate);
@@ -486,6 +519,10 @@ export class FlowgridGame {
     }
 
     for (const link of this.links.values()) {
+      if (link.establishing) {
+        link.dashOffset = 0;
+        continue;
+      }
       const normalized = link.maxRate > 0 ? clamp(link.smoothedRate / link.maxRate, 0, 1) : 0;
       if (normalized <= 0.01) {
         link.smoothedRate = 0;
@@ -662,21 +699,43 @@ export class FlowgridGame {
     ctx.fillStyle = '#f6f3ef';
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    ctx.setLineDash(LINK_DASH_PATTERN);
     for (const link of this.links.values()) {
       const source = this.nodes.get(link.sourceId);
       const target = this.nodes.get(link.targetId);
       if (!source || !target) continue;
       const color = FACTION_COLORS[link.owner];
-      ctx.strokeStyle = color;
-      const thickness = 2 + clamp(link.smoothedRate / link.maxRate, 0, 1) * 6;
+      const ratio = link.length > 0 ? clamp(link.buildProgress / link.length, 0, 1) : 1;
+      const endX = source.x + (target.x - source.x) * ratio;
+      const endY = source.y + (target.y - source.y) * ratio;
+      const normalizedRate = link.maxRate > 0 ? clamp(link.smoothedRate / link.maxRate, 0, 1) : 0;
+      const thickness = 2 + (link.establishing ? 0 : normalizedRate * 6);
+      ctx.save();
       ctx.lineWidth = thickness;
       ctx.lineCap = 'round';
-      ctx.lineDashOffset = link.dashOffset;
+      if (link.establishing) {
+        ctx.strokeStyle = hexToRgba(color, 0.75);
+        ctx.setLineDash(LINK_BUILD_DASH_PATTERN);
+        ctx.lineDashOffset = 0;
+      } else {
+        ctx.strokeStyle = color;
+        ctx.setLineDash(LINK_DASH_PATTERN);
+        ctx.lineDashOffset = link.dashOffset;
+      }
       ctx.beginPath();
       ctx.moveTo(source.x, source.y);
-      ctx.lineTo(target.x, target.y);
+      ctx.lineTo(endX, endY);
       ctx.stroke();
+
+      if (link.establishing && ratio < 1) {
+        ctx.strokeStyle = hexToRgba(color, 0.25);
+        ctx.setLineDash([3, 10]);
+        ctx.lineDashOffset = 0;
+        ctx.beginPath();
+        ctx.moveTo(endX, endY);
+        ctx.lineTo(target.x, target.y);
+        ctx.stroke();
+      }
+      ctx.restore();
     }
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
