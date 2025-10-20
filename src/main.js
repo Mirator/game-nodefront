@@ -48,7 +48,7 @@ const config = {
   fixedStep: 1 / 60,
   distanceLoss: 0.001,
   efficiencyFloor: 0.35,
-  captureSeed: 20,
+  captureSeed: 5,
   safetyReserve: 10,
   outgoingLimit: 3,
   linkMaxRate: 20,
