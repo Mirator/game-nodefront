@@ -44,6 +44,8 @@
  * @property {number} maxRate
  * @property {number} smoothedRate
  * @property {number} dashOffset
+ * @property {number} buildProgress - Distance that has been established along the link.
+ * @property {boolean} establishing - Whether the link is still being established.
  */
 
 /**
