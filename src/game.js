@@ -474,8 +474,11 @@ export class FlowgridGame {
         if (target.owner === link.owner) {
           target.energy = Math.min(target.capacity, target.energy + delivered);
         } else {
+          const defenderEnergyBefore = target.energy;
           target.energy = Math.max(0, target.energy - delivered);
-          aggressor[target.id] = link.owner;
+          if (defenderEnergyBefore > 0 && target.energy <= 0 && !aggressor[target.id]) {
+            aggressor[target.id] = link.owner;
+          }
         }
 
         link.smoothedRate = link.smoothedRate * 0.8 + rate * 0.2;
