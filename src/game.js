@@ -593,9 +593,18 @@ export class FlowgridGame {
 
         const valueBonus = target.capacity + (target.owner === 'player' ? 40 : 0);
         const baseScore = valueBonus / captureTime;
-        const jitter = 0.15;
-        const randomFactor = 1 - jitter + Math.random() * jitter * 2;
-        viable.push({ target, score: baseScore * randomFactor });
+
+        // Prioritize closer targets by weighting scores inversely with distance.
+        const distanceWeight = 1 / (1 + length / 100);
+
+        // Give neutrals a modest edge when otherwise evenly matched with player nodes.
+        const neutralMultiplier = target.owner === 'neutral' ? 1.1 : 1;
+
+        // Preserve a slight randomness to avoid deterministic ties without overpowering the weights.
+        const randomFactor = 1 + (Math.random() - 0.5) * 0.05;
+
+        const weightedScore = baseScore * distanceWeight * neutralMultiplier * randomFactor;
+        viable.push({ target, score: weightedScore });
       }
 
       if (viable.length === 0) {
