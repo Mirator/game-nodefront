@@ -22,6 +22,17 @@ function distance(ax, ay, bx, by) {
   return Math.hypot(dx, dy);
 }
 
+// Helper to ensure pointer resets remain consistent across the codebase.
+function createPointerState() {
+  return {
+    x: 0,
+    y: 0,
+    hoverNode: null,
+    dragSource: null,
+    isDragging: false,
+  };
+}
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
@@ -79,13 +90,7 @@ export class FlowgridGame {
     this.outgoingByNode = new Map();
     this.incomingByNode = new Map();
 
-    this.pointer = {
-      x: 0,
-      y: 0,
-      hoverNode: null,
-      dragSource: null,
-      isDragging: false,
-    };
+    this.pointer = createPointerState();
     this.accumulator = 0;
     this.lastTimestamp = 0;
     this.animationFrame = 0;
@@ -140,13 +145,7 @@ export class FlowgridGame {
     this.outgoingByNode.clear();
     this.incomingByNode.clear();
     this.lastCreatedLink = null;
-    this.pointer = {
-      x: 0,
-      y: 0,
-      hoverNode: null,
-      dragSource: null,
-      isDragging: false,
-    };
+    this.pointer = createPointerState();
     this.accumulator = 0;
     this.lastTimestamp = performance.now();
     this.paused = false;
