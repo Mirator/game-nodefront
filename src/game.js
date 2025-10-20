@@ -527,6 +527,7 @@ export class FlowgridGame {
   }
 
   runAiTurn() {
+    const regenMultiplier = this.config.regenRateMultiplier ?? 1;
     const aiNodes = Array.from(this.nodes.values()).filter((node) => node.owner === 'ai');
     for (const source of aiNodes) {
       const surplus = source.energy - source.safetyReserve;
@@ -540,30 +541,70 @@ export class FlowgridGame {
         continue;
       }
 
-      const candidates = Array.from(this.nodes.values())
-        .filter((node) => node.id !== source.id)
-        .sort((a, b) => distance(source.x, source.y, a.x, a.y) - distance(source.x, source.y, b.x, b.y));
-
-      /** @type {NodeState | null} */
-      let chosen = null;
-
-      const neutralPriority = candidates.filter((node) => node.owner === 'neutral' && node.energy < surplus);
-      if (neutralPriority.length > 0) {
-        chosen = neutralPriority[0];
+      const shareCount = outgoing.length + 1;
+      const perLinkAllocation = surplus / shareCount;
+      if (perLinkAllocation <= 0) {
+        continue;
       }
 
-      if (!chosen) {
-        const enemyTargets = candidates
-          .filter((node) => node.owner === 'player')
-          .sort((a, b) => a.energy - b.energy);
-        if (enemyTargets.length > 0) {
-          chosen = enemyTargets[0];
+      /** @type {{ target: NodeState; score: number }} */
+      const viable = [];
+
+      // Assess whether redistributing shares would starve current contested links.
+      let starvesExisting = false;
+      for (const link of outgoing) {
+        const target = this.nodes.get(link.targetId);
+        if (!target || target.owner === 'ai') {
+          continue;
+        }
+        const effectiveRate = Math.min(link.maxRate, perLinkAllocation);
+        const netRate = effectiveRate - target.regen * regenMultiplier;
+        if (netRate <= 0) {
+          starvesExisting = true;
+          break;
         }
       }
-
-      if (chosen) {
-        this.createLink(source.id, chosen.id);
+      if (starvesExisting) {
+        continue;
       }
+
+      for (const target of this.nodes.values()) {
+        if (target.id === source.id) continue;
+        if (target.owner === 'ai') continue;
+
+        const length = distance(source.x, source.y, target.x, target.y);
+        const speedFactor = clamp(1 - length * this.config.distanceLoss, this.config.efficiencyFloor, 1);
+        const maxRate = this.config.linkMaxRate * speedFactor;
+        if (maxRate <= 0) continue;
+
+        const potentialRate = Math.min(maxRate, perLinkAllocation);
+        if (potentialRate <= 0) continue;
+
+        const targetRegen = target.regen * regenMultiplier;
+        const netRate = potentialRate - targetRegen;
+        if (netRate <= 0) continue;
+
+        const captureTime = target.energy / netRate;
+        if (!Number.isFinite(captureTime) || captureTime <= 0) continue;
+
+        const energyRequired = captureTime * potentialRate;
+        if (energyRequired > surplus) {
+          continue;
+        }
+
+        const valueBonus = target.capacity + (target.owner === 'player' ? 40 : 0);
+        const baseScore = valueBonus / captureTime;
+        const jitter = 0.15;
+        const randomFactor = 1 - jitter + Math.random() * jitter * 2;
+        viable.push({ target, score: baseScore * randomFactor });
+      }
+
+      if (viable.length === 0) {
+        continue;
+      }
+
+      viable.sort((a, b) => b.score - a.score);
+      this.createLink(source.id, viable[0].target.id);
     }
   }
 
