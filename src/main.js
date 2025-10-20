@@ -1,4 +1,4 @@
-import { FlowgridGame } from './game.js';
+import { FlowgridGame } from './game/index.js';
 import { levelOne } from './level.js';
 
 /** @type {HTMLDivElement | null} */
@@ -28,6 +28,21 @@ container.appendChild(pauseIndicator);
 const legend = document.createElement('div');
 legend.className = 'legend';
 container.appendChild(legend);
+
+const aiControls = document.createElement('div');
+aiControls.className = 'ai-controls';
+container.appendChild(aiControls);
+
+const aiLabel = document.createElement('label');
+aiLabel.className = 'ai-controls__label';
+aiLabel.textContent = 'AI Strategy';
+aiLabel.htmlFor = 'ai-strategy-select';
+aiControls.appendChild(aiLabel);
+
+const aiSelect = document.createElement('select');
+aiSelect.id = 'ai-strategy-select';
+aiSelect.name = 'ai-strategy-select';
+aiControls.appendChild(aiSelect);
 
 const prompt = document.createElement('div');
 prompt.className = 'prompt';
@@ -61,7 +76,7 @@ const config = {
   },
 };
 
-new FlowgridGame(
+const game = new FlowgridGame(
   canvas,
   {
     title,
@@ -75,3 +90,15 @@ new FlowgridGame(
   levelOne,
   config,
 );
+
+for (const strategy of game.getAvailableStrategies()) {
+  const option = document.createElement('option');
+  option.value = strategy.id;
+  option.textContent = strategy.label;
+  aiSelect.appendChild(option);
+}
+
+aiSelect.value = game.getAiStrategyId();
+aiSelect.addEventListener('change', () => {
+  game.setAiStrategy(aiSelect.value);
+});

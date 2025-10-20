@@ -1,75 +1,22 @@
-/** @typedef {import('./types.js').Faction} Faction */
-/** @typedef {import('./types.js').GameConfig} GameConfig */
-/** @typedef {import('./types.js').LevelDefinition} LevelDefinition */
-/** @typedef {import('./types.js').LinkState} LinkState */
-/** @typedef {import('./types.js').NodeState} NodeState */
+/** @typedef {import('../types.js').Faction} Faction */
+/** @typedef {import('../types.js').GameConfig} GameConfig */
+/** @typedef {import('../types.js').LevelDefinition} LevelDefinition */
+/** @typedef {import('../types.js').LinkState} LinkState */
+/** @typedef {import('../types.js').NodeState} NodeState */
 
-const FACTION_COLORS = {
-  player: '#2563eb',
-  ai: '#dc2626',
-  neutral: '#9ca3af',
-};
-
-const FRIENDLY_OUTLINE = '#0f172a';
-
-const LINK_DASH_PATTERN = [12, 8];
-const LINK_DASH_CYCLE = LINK_DASH_PATTERN[0] + LINK_DASH_PATTERN[1];
-const LINK_DASH_SPEED = 60;
-const LINK_BUILD_SPEED = 280;
-const LINK_BUILD_DASH_PATTERN = [4, 12];
-
-function distance(ax, ay, bx, by) {
-  const dx = ax - bx;
-  const dy = ay - by;
-  return Math.hypot(dx, dy);
-}
-
-function distanceToSegment(px, py, ax, ay, bx, by) {
-  const dx = bx - ax;
-  const dy = by - ay;
-  if (dx === 0 && dy === 0) {
-    return distance(px, py, ax, ay);
-  }
-  const t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);
-  const clampedT = clamp(t, 0, 1);
-  const closestX = ax + clampedT * dx;
-  const closestY = ay + clampedT * dy;
-  return distance(px, py, closestX, closestY);
-}
-
-// Helper to ensure pointer resets remain consistent across the codebase.
-function createPointerState() {
-  return {
-    x: 0,
-    y: 0,
-    hoverNode: null,
-    dragSource: null,
-    isDragging: false,
-  };
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function hexToRgba(hex, alpha) {
-  const normalized = hex.replace('#', '');
-  let r = 0;
-  let g = 0;
-  let b = 0;
-
-  if (normalized.length === 3) {
-    r = parseInt(normalized[0] + normalized[0], 16);
-    g = parseInt(normalized[1] + normalized[1], 16);
-    b = parseInt(normalized[2] + normalized[2], 16);
-  } else if (normalized.length === 6) {
-    r = parseInt(normalized.slice(0, 2), 16);
-    g = parseInt(normalized.slice(2, 4), 16);
-    b = parseInt(normalized.slice(4, 6), 16);
-  }
-
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+import { hexToRgba } from './color.js';
+import {
+  FACTION_COLORS,
+  FRIENDLY_OUTLINE,
+  LINK_BUILD_DASH_PATTERN,
+  LINK_BUILD_SPEED,
+  LINK_DASH_CYCLE,
+  LINK_DASH_PATTERN,
+  LINK_DASH_SPEED,
+} from './constants.js';
+import { getStrategy, getStrategyList } from './ai/index.js';
+import { createPointerState } from './pointer.js';
+import { clamp, distance, distanceToSegment } from './math.js';
 
 export class FlowgridGame {
   /**
@@ -119,6 +66,11 @@ export class FlowgridGame {
     this.promptLastMessage = '';
     this.promptLastVariant = 'normal';
     this.promptTimeout = 0;
+
+    this.availableStrategies = getStrategyList();
+    const defaultStrategy = getStrategy('aggressive-simple');
+    this.aiStrategy = defaultStrategy;
+    this.aiStrategyId = defaultStrategy.id;
 
     this.loop = (timestamp) => {
       const delta = (timestamp - this.lastTimestamp) / 1000;
@@ -189,16 +141,6 @@ export class FlowgridGame {
     this.tutorialShown = false;
   }
 
-  applyPrompt(message, variant) {
-    const prompt = this.hudElements.prompt;
-    prompt.textContent = message;
-    if (variant === 'warning') {
-      prompt.classList.add('warning');
-    } else {
-      prompt.classList.remove('warning');
-    }
-  }
-
   clearPromptTimeout() {
     if (this.promptTimeout) {
       window.clearTimeout(this.promptTimeout);
@@ -211,6 +153,16 @@ export class FlowgridGame {
     this.promptLastMessage = message;
     this.promptLastVariant = variant;
     this.applyPrompt(message, variant);
+  }
+
+  applyPrompt(message, variant) {
+    const prompt = this.hudElements.prompt;
+    prompt.textContent = message;
+    if (variant === 'warning') {
+      prompt.classList.add('warning');
+    } else {
+      prompt.classList.remove('warning');
+    }
   }
 
   showTemporaryPrompt(message, variant = 'normal', duration = 2000) {
@@ -443,7 +395,6 @@ export class FlowgridGame {
 
   update(dt) {
     const regenMultiplier = this.config.regenRateMultiplier ?? 1;
-    // Regenerate energy
     for (const node of this.nodes.values()) {
       node.energy = Math.min(node.capacity, node.energy + node.regen * dt * regenMultiplier);
     }
@@ -566,94 +517,10 @@ export class FlowgridGame {
   }
 
   runAiTurn() {
-    const regenMultiplier = this.config.regenRateMultiplier ?? 1;
-    const aiNodes = Array.from(this.nodes.values()).filter((node) => node.owner === 'ai');
-    for (const source of aiNodes) {
-      const surplus = source.energy - source.safetyReserve;
-      if (surplus < this.config.surplusThreshold) {
-        this.trimAiLinksIfWeak(source);
-        continue;
-      }
-
-      const outgoing = this.outgoingByNode.get(source.id) ?? [];
-      if (outgoing.length >= source.outgoingLimit) {
-        continue;
-      }
-
-      const shareCount = outgoing.length + 1;
-      const perLinkAllocation = surplus / shareCount;
-      if (perLinkAllocation <= 0) {
-        continue;
-      }
-
-      /** @type {{ target: NodeState; score: number }} */
-      const viable = [];
-
-      // Assess whether redistributing shares would starve current contested links.
-      let starvesExisting = false;
-      for (const link of outgoing) {
-        const target = this.nodes.get(link.targetId);
-        if (!target || target.owner === 'ai') {
-          continue;
-        }
-        const effectiveRate = Math.min(link.maxRate, perLinkAllocation);
-        const netRate = effectiveRate - target.regen * regenMultiplier;
-        if (netRate <= 0) {
-          starvesExisting = true;
-          break;
-        }
-      }
-      if (starvesExisting) {
-        continue;
-      }
-
-      for (const target of this.nodes.values()) {
-        if (target.id === source.id) continue;
-        if (target.owner === 'ai') continue;
-
-        const length = distance(source.x, source.y, target.x, target.y);
-        const speedFactor = clamp(1 - length * this.config.distanceLoss, this.config.efficiencyFloor, 1);
-        const maxRate = this.config.linkMaxRate * speedFactor;
-        if (maxRate <= 0) continue;
-
-        const potentialRate = Math.min(maxRate, perLinkAllocation);
-        if (potentialRate <= 0) continue;
-
-        const targetRegen = target.regen * regenMultiplier;
-        const netRate = potentialRate - targetRegen;
-        if (netRate <= 0) continue;
-
-        const captureTime = target.energy / netRate;
-        if (!Number.isFinite(captureTime) || captureTime <= 0) continue;
-
-        const energyRequired = captureTime * potentialRate;
-        if (energyRequired > surplus) {
-          continue;
-        }
-
-        const valueBonus = target.capacity + (target.owner === 'player' ? 40 : 0);
-        const baseScore = valueBonus / captureTime;
-
-        // Prioritize closer targets by weighting scores inversely with distance.
-        const distanceWeight = 1 / (1 + length / 100);
-
-        // Give neutrals a modest edge when otherwise evenly matched with player nodes.
-        const neutralMultiplier = target.owner === 'neutral' ? 1.1 : 1;
-
-        // Preserve a slight randomness to avoid deterministic ties without overpowering the weights.
-        const randomFactor = 1 + (Math.random() - 0.5) * 0.05;
-
-        const weightedScore = baseScore * distanceWeight * neutralMultiplier * randomFactor;
-        viable.push({ target, score: weightedScore });
-      }
-
-      if (viable.length === 0) {
-        continue;
-      }
-
-      viable.sort((a, b) => b.score - a.score);
-      this.createLink(source.id, viable[0].target.id);
+    if (!this.aiStrategy) {
+      return;
     }
+    this.aiStrategy.run(this);
   }
 
   trimAiLinksIfWeak(node) {
@@ -779,7 +646,7 @@ export class FlowgridGame {
         Math.max(2, node.radius * 0.2),
         node.x,
         node.y,
-        node.radius
+        node.radius,
       );
       bodyGradient.addColorStop(0, 'rgba(255,255,255,0.85)');
       bodyGradient.addColorStop(0.7, hexToRgba(color, 0.95));
@@ -799,17 +666,43 @@ export class FlowgridGame {
       ctx.fillStyle = color;
       ctx.globalAlpha = 0.85;
       ctx.beginPath();
-      ctx.arc(node.x, node.y, innerRadius * energyRatio, 0, Math.PI * 2);
+      ctx.moveTo(node.x, node.y);
+      ctx.arc(node.x, node.y, innerRadius, -Math.PI / 2, -Math.PI / 2 + energyRatio * Math.PI * 2);
+      ctx.lineTo(node.x, node.y);
       ctx.fill();
       ctx.globalAlpha = 1;
 
       ctx.fillStyle = '#1f2933';
-      ctx.font = '12px "Inter", "Segoe UI", sans-serif';
+      ctx.font = 'bold 12px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(Math.round(node.energy).toString(), node.x, node.y);
+      ctx.fillText(String(Math.round(node.energy)), node.x, node.y);
 
       ctx.restore();
     }
+  }
+
+  /**
+   * @returns {ReadonlyArray<{ id: string; label: string }>}
+   */
+  getAvailableStrategies() {
+    return [...this.availableStrategies];
+  }
+
+  /**
+   * @returns {string}
+   */
+  getAiStrategyId() {
+    return this.aiStrategyId;
+  }
+
+  /**
+   * @param {string} id
+   */
+  setAiStrategy(id) {
+    const strategy = getStrategy(id);
+    this.aiStrategy = strategy;
+    this.aiStrategyId = strategy.id;
+    this.showTemporaryPrompt(`AI strategy: ${strategy.label}`, 'normal', 1800);
   }
 }
