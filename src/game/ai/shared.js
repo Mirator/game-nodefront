@@ -47,14 +47,26 @@ export function pickBestTarget(game, source, candidates, perLinkAllocation, surp
     if (potentialRate <= 0) continue;
 
     const targetRegen = target.regen * regenMultiplier;
-    const netRate = potentialRate - targetRegen;
+    const cooperatingLinks = (game.incomingByNode.get(target.id) ?? []).filter(
+      (link) => link.owner === 'ai' && link.sourceId !== source.id,
+    );
+    const existingSupportRate = cooperatingLinks.reduce((acc, link) => {
+      if (link.establishing) return acc;
+      return acc + Math.max(0, link.smoothedRate);
+    }, 0);
+
+    const netRate = potentialRate + existingSupportRate - targetRegen;
     if (netRate <= 0) continue;
 
     const captureTime = target.energy / netRate;
     if (!Number.isFinite(captureTime) || captureTime <= 0) continue;
 
     const energyRequired = captureTime * potentialRate;
-    if (energyRequired > surplus) {
+    const regenContribution = source.regen * regenMultiplier * captureTime;
+    const availableBudget = surplus + regenContribution;
+    const supporterCount = cooperatingLinks.length;
+    const effectiveRequirement = supporterCount > 0 ? energyRequired / (supporterCount + 1) : energyRequired;
+    if (effectiveRequirement > availableBudget) {
       continue;
     }
 
