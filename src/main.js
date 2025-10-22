@@ -74,6 +74,7 @@ const config = {
     '2': 0.5,
     '3': 1,
   },
+  aiInitialDelay: 2.5,
 };
 
 const game = new FlowgridGame(

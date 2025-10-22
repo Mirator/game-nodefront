@@ -62,7 +62,6 @@ export class FlowgridGame {
     /** @type {LinkState | null} */
     this.lastCreatedLink = null;
     this.tutorialShown = false;
-    this.aiCooldown = 0;
     this.promptLastMessage = '';
     this.promptLastVariant = 'normal';
     this.promptTimeout = 0;
@@ -71,6 +70,20 @@ export class FlowgridGame {
     const defaultStrategy = getStrategy('aggressive-simple');
     this.aiStrategy = defaultStrategy;
     this.aiStrategyId = defaultStrategy.id;
+
+    this.aiTurnInterval =
+      typeof config.aiTurnInterval === 'number' &&
+      Number.isFinite(config.aiTurnInterval) &&
+      config.aiTurnInterval > 0
+        ? config.aiTurnInterval
+        : 0.35;
+    this.aiInitialDelay =
+      typeof config.aiInitialDelay === 'number' &&
+      Number.isFinite(config.aiInitialDelay) &&
+      config.aiInitialDelay >= 0
+        ? config.aiInitialDelay
+        : this.aiTurnInterval;
+    this.aiCooldown = this.aiInitialDelay;
 
     this.loop = (timestamp) => {
       const delta = (timestamp - this.lastTimestamp) / 1000;
@@ -117,7 +130,7 @@ export class FlowgridGame {
     this.lastTimestamp = performance.now();
     this.paused = false;
     this.winner = null;
-    this.aiCooldown = 0;
+    this.aiCooldown = this.aiInitialDelay;
 
     for (const definition of this.initialLevel.nodes) {
       /** @type {NodeState} */
@@ -500,7 +513,7 @@ export class FlowgridGame {
     this.aiCooldown -= dt;
     if (this.aiCooldown <= 0 && !this.winner) {
       this.runAiTurn();
-      this.aiCooldown = 0.35;
+      this.aiCooldown = this.aiTurnInterval;
     }
 
     this.checkVictory();
