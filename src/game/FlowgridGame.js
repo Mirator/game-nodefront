@@ -14,7 +14,7 @@ import {
   LINK_DASH_PATTERN,
   LINK_DASH_SPEED,
 } from './constants.js';
-import { getStrategy, getStrategyList } from './ai/index.js';
+import { DEFAULT_STRATEGY_ID, getStrategy, getStrategyList } from './ai/index.js';
 import { createPointerState } from './pointer.js';
 import { clamp, distance, distanceToSegment } from './math.js';
 
@@ -67,7 +67,7 @@ export class FlowgridGame {
     this.promptTimeout = 0;
 
     this.availableStrategies = getStrategyList();
-    const defaultStrategy = getStrategy('aggressive-simple');
+    const defaultStrategy = getStrategy(DEFAULT_STRATEGY_ID);
     this.aiStrategy = defaultStrategy;
     this.aiStrategyId = defaultStrategy.id;
 
@@ -83,6 +83,13 @@ export class FlowgridGame {
       config.aiInitialDelay >= 0
         ? config.aiInitialDelay
         : this.aiTurnInterval;
+    this.aiNodeAttackDelay =
+      typeof config.aiNodeAttackDelay === 'number' &&
+      Number.isFinite(config.aiNodeAttackDelay) &&
+      config.aiNodeAttackDelay >= 0
+        ? config.aiNodeAttackDelay
+        : 1;
+    this.aiNodeAttackCooldown = new Map();
     this.aiCooldown = this.aiInitialDelay;
 
     this.loop = (timestamp) => {
@@ -131,6 +138,7 @@ export class FlowgridGame {
     this.paused = false;
     this.winner = null;
     this.aiCooldown = this.aiInitialDelay;
+    this.aiNodeAttackCooldown.clear();
 
     for (const definition of this.initialLevel.nodes) {
       /** @type {NodeState} */
@@ -141,6 +149,9 @@ export class FlowgridGame {
         safetyReserve: this.config.safetyReserve,
       };
       this.nodes.set(node.id, node);
+      if (node.owner === 'ai' && this.aiNodeAttackDelay > 0) {
+        this.aiNodeAttackCooldown.set(node.id, this.aiNodeAttackDelay);
+      }
     }
 
     for (const node of this.nodes.values()) {
@@ -311,6 +322,13 @@ export class FlowgridGame {
     if (source.owner !== 'player' && source.owner !== 'ai') return;
     if (source.owner === 'player' && this.winner) return;
 
+    if (source.owner === 'ai') {
+      const remaining = this.aiNodeAttackCooldown.get(sourceId);
+      if (remaining && remaining > 0) {
+        return;
+      }
+    }
+
     if (source.owner === 'player' && this.paused) return;
 
     if (sourceId === targetId) return;
@@ -353,6 +371,10 @@ export class FlowgridGame {
     }
     link.share = equalShare;
     this.lastCreatedLink = link;
+
+    if (source.owner === 'ai' && this.aiNodeAttackDelay > 0) {
+      this.aiNodeAttackCooldown.set(sourceId, this.aiNodeAttackDelay);
+    }
   }
 
   applySharePreset(link, fraction) {
@@ -407,6 +429,17 @@ export class FlowgridGame {
   }
 
   update(dt) {
+    if (this.aiNodeAttackCooldown.size > 0) {
+      for (const [nodeId, remaining] of [...this.aiNodeAttackCooldown.entries()]) {
+        const updated = remaining - dt;
+        if (updated <= 0) {
+          this.aiNodeAttackCooldown.delete(nodeId);
+        } else {
+          this.aiNodeAttackCooldown.set(nodeId, updated);
+        }
+      }
+    }
+
     const regenMultiplier = this.config.regenRateMultiplier ?? 1;
     for (const node of this.nodes.values()) {
       node.energy = Math.min(node.capacity, node.energy + node.regen * dt * regenMultiplier);
@@ -522,6 +555,16 @@ export class FlowgridGame {
   captureNode(node, newOwner) {
     node.owner = newOwner;
     node.energy = this.config.captureSeed;
+
+    if (newOwner === 'ai') {
+      if (this.aiNodeAttackDelay > 0) {
+        this.aiNodeAttackCooldown.set(node.id, this.aiNodeAttackDelay);
+      } else {
+        this.aiNodeAttackCooldown.delete(node.id);
+      }
+    } else {
+      this.aiNodeAttackCooldown.delete(node.id);
+    }
 
     const outgoing = this.outgoingByNode.get(node.id) ?? [];
     for (const link of [...outgoing]) {

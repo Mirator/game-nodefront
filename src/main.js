@@ -75,6 +75,7 @@ const config = {
     '3': 1,
   },
   aiInitialDelay: 2.5,
+  aiNodeAttackDelay: 1,
 };
 
 const game = new FlowgridGame(

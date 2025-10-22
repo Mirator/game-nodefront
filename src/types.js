@@ -62,6 +62,7 @@
  * @property {Record<string, number>} sharePresets
  * @property {number} [aiTurnInterval]
  * @property {number} [aiInitialDelay]
+ * @property {number} [aiNodeAttackDelay]
  */
 
 export {};
