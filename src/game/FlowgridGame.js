@@ -382,17 +382,53 @@ export class FlowgridGame {
     if (!sourceLinks) return;
     if (!sourceLinks.includes(link)) return;
 
-    const totalWithout = sourceLinks.reduce((acc, l) => (l === link ? acc : acc + l.share), 0);
-    const remaining = Math.max(0, 1 - totalWithout);
     const desired = clamp(fraction, 0.05, 1);
-    link.share = Math.min(desired, remaining);
+    const others = sourceLinks.filter((l) => l !== link);
 
-    const total = sourceLinks.reduce((acc, l) => acc + l.share, 0);
-    if (total > 1) {
-      const scale = 1 / total;
-      for (const outgoing of sourceLinks) {
-        outgoing.share *= scale;
+    if (others.length === 0) {
+      link.share = 1;
+      return;
+    }
+
+    const remainingBudget = Math.max(0, 1 - desired);
+    const previousShares = others.map((other) => other.share);
+    const previousTotal = previousShares.reduce((acc, value) => acc + value, 0);
+
+    link.share = desired;
+
+    if (remainingBudget === 0) {
+      for (const other of others) {
+        other.share = 0;
       }
+      return;
+    }
+
+    let assigned = 0;
+
+    if (previousTotal > 0) {
+      const scale = remainingBudget / previousTotal;
+      for (let i = 0; i < others.length; i += 1) {
+        const baseShare = previousShares[i] * scale;
+        const isLast = i === others.length - 1;
+        const newShare = isLast ? remainingBudget - assigned : baseShare;
+        others[i].share = newShare;
+        assigned += newShare;
+      }
+    } else {
+      const evenShare = remainingBudget / others.length;
+      for (let i = 0; i < others.length; i += 1) {
+        const isLast = i === others.length - 1;
+        const newShare = isLast ? remainingBudget - assigned : evenShare;
+        others[i].share = newShare;
+        assigned += newShare;
+      }
+    }
+
+    const total = others.reduce((acc, other) => acc + other.share, link.share);
+    const delta = 1 - total;
+    if (Math.abs(delta) > Number.EPSILON) {
+      const lastOther = others[others.length - 1];
+      lastOther.share = clamp(lastOther.share + delta, 0, remainingBudget);
     }
   }
 
