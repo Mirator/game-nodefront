@@ -61,10 +61,19 @@ container.appendChild(prompt);
 const endScreen = document.createElement('div');
 endScreen.className = 'end-screen';
 const endHeadline = document.createElement('h1');
+const endActions = document.createElement('div');
+endActions.className = 'end-screen__actions';
 const restartButton = document.createElement('button');
+restartButton.type = 'button';
 restartButton.textContent = 'Restart';
+const nextLevelButton = document.createElement('button');
+nextLevelButton.type = 'button';
+nextLevelButton.className = 'end-screen__next';
+nextLevelButton.textContent = 'Choose Next Level';
+endActions.appendChild(restartButton);
+endActions.appendChild(nextLevelButton);
 endScreen.appendChild(endHeadline);
-endScreen.appendChild(restartButton);
+endScreen.appendChild(endActions);
 endScreen.style.display = 'none';
 container.appendChild(endScreen);
 
@@ -84,16 +93,35 @@ const menuForm = document.createElement('form');
 menuForm.className = 'menu__form';
 menu.appendChild(menuForm);
 
-const levelLabel = document.createElement('label');
+const levelLabel = document.createElement('p');
 levelLabel.className = 'menu__label';
-levelLabel.htmlFor = 'level-select';
 levelLabel.textContent = 'Select Level';
 menuForm.appendChild(levelLabel);
 
-const levelSelect = document.createElement('select');
-levelSelect.id = 'level-select';
-levelSelect.name = 'level-select';
-menuForm.appendChild(levelSelect);
+const levelGrid = document.createElement('div');
+levelGrid.className = 'menu__level-grid';
+menuForm.appendChild(levelGrid);
+
+/** @type {Map<string, HTMLButtonElement>} */
+const levelButtons = new Map();
+
+/** @type {string} */
+let currentLevelId = '';
+
+const selectLevel = (levelId) => {
+  const button = levelButtons.get(levelId);
+  if (!button || button.classList.contains('menu__level-button--locked')) {
+    return;
+  }
+  currentLevelId = levelId;
+  for (const [id, levelButton] of levelButtons.entries()) {
+    const isSelected = id === currentLevelId;
+    levelButton.classList.toggle('menu__level-button--selected', isSelected);
+    levelButton.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    const isLocked = levelButton.classList.contains('menu__level-button--locked');
+    levelButton.setAttribute('aria-disabled', isLocked ? 'true' : 'false');
+  }
+};
 
 const menuActions = document.createElement('div');
 menuActions.className = 'menu__actions';
@@ -117,15 +145,50 @@ if (!defaultLevel) {
   throw new Error('No levels available.');
 }
 
-for (const level of availableLevels) {
-  const option = document.createElement('option');
-  option.value = level.id;
-  option.textContent = level.name;
-  levelSelect.appendChild(option);
-}
-
-let currentLevelId = defaultLevel.id;
+currentLevelId = defaultLevel.id;
 levelManager.setCurrentLevel(currentLevelId);
+
+const findLevelIndex = (id) =>
+  availableLevels.findIndex((level) => level.id === id);
+
+const getNextLevelId = (id) => {
+  const currentIndex = findLevelIndex(id);
+  if (currentIndex >= 0 && currentIndex < availableLevels.length - 1) {
+    return availableLevels[currentIndex + 1].id;
+  }
+  return null;
+};
+
+availableLevels.forEach((level, index) => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'menu__level-button';
+  button.dataset.levelId = level.id;
+  button.setAttribute('aria-pressed', 'false');
+  button.setAttribute('aria-disabled', 'false');
+
+  const bubble = document.createElement('span');
+  bubble.className = 'menu__level-bubble';
+  bubble.textContent = String(index + 1).padStart(2, '0');
+  button.appendChild(bubble);
+
+  const caption = document.createElement('span');
+  caption.className = 'menu__level-caption';
+  caption.textContent = level.name;
+  button.appendChild(caption);
+
+  button.addEventListener('click', () => {
+    if (button.classList.contains('menu__level-button--locked')) {
+      return;
+    }
+    selectLevel(level.id);
+  });
+
+  levelButtons.set(level.id, button);
+  levelGrid.appendChild(button);
+});
+
+selectLevel(currentLevelId);
 
 /** @type {import('./types.js').GameConfig} */
 const config = {
@@ -176,8 +239,6 @@ aiSelect.addEventListener('change', () => {
   game.setAiStrategy(aiSelect.value);
 });
 
-levelSelect.value = currentLevelId;
-
 let resumeAfterMenu = false;
 let wasPausedBeforeMenu = false;
 
@@ -201,7 +262,7 @@ const openMenu = ({ resumeOnClose = true } = {}) => {
   wasPausedBeforeMenu = game.isPaused();
   resumeAfterMenu = resumeOnClose && !wasPausedBeforeMenu;
   game.pause(false);
-  levelSelect.value = currentLevelId;
+  selectLevel(currentLevelId);
   menuOverlay.classList.add('menu-overlay--visible');
 };
 
@@ -215,7 +276,7 @@ cancelButton.addEventListener('click', () => {
 
 menuForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  const selectedLevel = levelManager.getLevelById(levelSelect.value);
+  const selectedLevel = levelManager.getLevelById(currentLevelId);
   if (!selectedLevel) {
     return;
   }
@@ -226,6 +287,15 @@ menuForm.addEventListener('submit', (event) => {
     game.start();
   }
   closeMenu({ resume: true });
+});
+
+nextLevelButton.addEventListener('click', () => {
+  const upcomingLevelId = getNextLevelId(currentLevelId);
+  if (upcomingLevelId) {
+    selectLevel(upcomingLevelId);
+  }
+  endScreen.style.display = 'none';
+  openMenu({ resumeOnClose: false });
 });
 
 // Allow the player to choose their starting level immediately.
