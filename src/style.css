@@ -253,6 +253,13 @@ canvas {
   border-radius: 20px;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
   color: #1f2933;
+  --menu-level-base-size: 96px;
+  --menu-level-bubble-size: calc(var(--menu-level-base-size) / 2);
+  --menu-level-grid-min: calc(var(--menu-level-bubble-size) + 34px);
+  --menu-level-gap: clamp(10px, calc(var(--menu-level-bubble-size) / 3), 18px);
+  --menu-level-button-gap: clamp(6px, calc(var(--menu-level-bubble-size) / 4.8), 10px);
+  --menu-level-number: clamp(14px, calc(var(--menu-level-bubble-size) / 3), 24px);
+  --menu-level-caption: clamp(10px, calc(var(--menu-level-bubble-size) / 4.5), 12px);
 }
 
 .menu h2 {
@@ -275,23 +282,88 @@ canvas {
   font-weight: 600;
 }
 
-.menu select {
-  appearance: none;
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.2);
-  background: #ffffff;
-  color: #1f2933;
-  font-size: 14px;
-  letter-spacing: 0.02em;
+.menu__level-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--menu-level-grid-min), 1fr));
+  gap: var(--menu-level-gap);
+}
+
+.menu__level-button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--menu-level-button-gap);
+  color: inherit;
+  font: inherit;
   cursor: pointer;
+  text-align: center;
+  transition: transform 0.15s ease;
+}
+
+.menu__level-button:focus-visible {
   outline: none;
 }
 
-.menu select:focus-visible {
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
-  border-color: #2563eb;
+.menu__level-bubble {
+  width: var(--menu-level-bubble-size);
+  height: var(--menu-level-bubble-size);
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  display: grid;
+  place-items: center;
+  font-size: var(--menu-level-number);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border: 2px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.menu__level-caption {
+  font-size: var(--menu-level-caption);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.menu__level-button:not(.menu__level-button--locked):hover .menu__level-bubble,
+.menu__level-button:not(.menu__level-button--locked):focus-visible .menu__level-bubble {
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+  transform: translateY(-2px);
+}
+
+.menu__level-button:not(.menu__level-button--locked):active .menu__level-bubble {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.menu__level-button--selected .menu__level-bubble {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.24);
+}
+
+.menu__level-button--selected .menu__level-caption {
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.menu__level-button--locked {
+  cursor: not-allowed;
+}
+
+.menu__level-button--locked .menu__level-bubble {
+  background: rgba(148, 163, 184, 0.3);
+  color: rgba(71, 85, 105, 0.7);
+  border: 2px dashed rgba(71, 85, 105, 0.4);
+  box-shadow: none;
+}
+
+.menu__level-button--locked .menu__level-caption {
+  color: rgba(71, 85, 105, 0.7);
 }
 
 .menu__actions {
@@ -340,4 +412,11 @@ canvas {
 .menu__cancel:active {
   transform: translateY(0);
   box-shadow: none;
+}
+
+.end-screen__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
