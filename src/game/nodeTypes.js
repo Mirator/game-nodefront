@@ -3,16 +3,19 @@ export const NODE_TYPES = {
     capacity: 80,
     regen: 4,
     radius: 12,
+    outgoingLimit: 1,
   },
   medium: {
     capacity: 110,
     regen: 6,
     radius: 18,
+    outgoingLimit: 2,
   },
   large: {
     capacity: 150,
     regen: 8,
     radius: 26,
+    outgoingLimit: 3,
   },
 };
 
