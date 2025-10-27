@@ -66,7 +66,7 @@ export function resetState(game) {
       regen: typeConfig.regen,
       radius: typeConfig.radius,
       energy,
-      outgoingLimit: game.config.outgoingLimit,
+      outgoingLimit: typeConfig.outgoingLimit,
       safetyReserve: game.config.safetyReserve,
     };
     game.nodes.set(node.id, node);

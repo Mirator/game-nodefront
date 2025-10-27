@@ -62,7 +62,6 @@
  * @property {number} efficiencyFloor - Minimum rate multiplier applied to long links.
  * @property {number} captureSeed
  * @property {number} safetyReserve
- * @property {number} outgoingLimit
  * @property {number} linkMaxRate
  * @property {number} surplusThreshold
  * @property {number} regenRateMultiplier

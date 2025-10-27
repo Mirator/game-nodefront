@@ -197,7 +197,6 @@ const config = {
   efficiencyFloor: 0.35,
   captureSeed: 5,
   safetyReserve: 10,
-  outgoingLimit: 3,
   linkMaxRate: 20,
   surplusThreshold: 20,
   regenRateMultiplier: 0.6,
