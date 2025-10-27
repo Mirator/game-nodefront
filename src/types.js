@@ -3,15 +3,20 @@
  */
 
 /**
+ * @typedef {'small' | 'medium' | 'large'} NodeTypeId
+ */
+
+/**
  * @typedef {Object} NodeDefinition
  * @property {string} id
  * @property {number} x
  * @property {number} y
  * @property {Faction} owner
  * @property {number} energy
- * @property {number} capacity
- * @property {number} regen
- * @property {number} radius
+ * @property {NodeTypeId} [type]
+ * @property {number} [capacity]
+ * @property {number} [regen]
+ * @property {number} [radius]
  */
 
 /**
@@ -30,6 +35,7 @@
  *   safetyReserve: number;
  *   energy: number;
  *   owner: Faction;
+ *   type: NodeTypeId;
  * }} NodeState
  */
 

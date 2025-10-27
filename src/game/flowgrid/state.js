@@ -3,6 +3,7 @@
 /** @typedef {import('../../types.js').NodeState} NodeState */
 
 import { createPointerState } from '../pointer.js';
+import { DEFAULT_NODE_TYPE, NODE_TYPES } from '../nodeTypes.js';
 
 /**
  * @param {FlowgridGame} game
@@ -46,10 +47,25 @@ export function resetState(game) {
   game.aiNodeAttackCooldown.clear();
 
   for (const definition of game.initialLevel.nodes) {
+    const type = definition.type ?? DEFAULT_NODE_TYPE;
+    const typeConfig = NODE_TYPES[type];
+    if (!typeConfig) {
+      throw new Error(`Unknown node type: ${type}`);
+    }
+
+    const energy = Math.min(
+      definition.energy ?? typeConfig.capacity,
+      typeConfig.capacity,
+    );
+
     /** @type {NodeState} */
     const node = {
       ...definition,
-      energy: definition.energy,
+      type,
+      capacity: typeConfig.capacity,
+      regen: typeConfig.regen,
+      radius: typeConfig.radius,
+      energy,
       outgoingLimit: game.config.outgoingLimit,
       safetyReserve: game.config.safetyReserve,
     };
