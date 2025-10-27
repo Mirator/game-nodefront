@@ -17,6 +17,7 @@
 /**
  * @typedef {Object} LevelDefinition
  * @property {string} id
+ * @property {string} name
  * @property {number} width
  * @property {number} height
  * @property {Array<NodeDefinition>} nodes

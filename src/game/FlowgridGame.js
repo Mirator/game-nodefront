@@ -57,6 +57,7 @@ export class FlowgridGame {
     this.lastTimestamp = 0;
     this.animationFrame = 0;
     this.paused = false;
+    this.running = false;
     /** @type {Faction | null} */
     this.winner = null;
     /** @type {LinkState | null} */
@@ -109,21 +110,45 @@ export class FlowgridGame {
       this.animationFrame = requestAnimationFrame(this.loop);
     };
 
-    this.canvas.width = level.width;
-    this.canvas.height = level.height;
-
-    this.hudElements.title.textContent = 'Flowgrid — Level 1';
     this.hudElements.legend.innerHTML =
       '<span class="player">Player</span><span class="ai">AI</span><span class="neutral">Neutral</span>';
 
+    this.applyLevel(level);
     this.resetState();
     this.registerInput();
-    this.start();
   }
 
   start() {
+    if (this.running) {
+      return;
+    }
+    this.running = true;
     this.lastTimestamp = performance.now();
     this.animationFrame = requestAnimationFrame(this.loop);
+  }
+
+  isRunning() {
+    return this.running;
+  }
+
+  isPaused() {
+    return this.paused;
+  }
+
+  applyLevel(level) {
+    this.initialLevel = level;
+    this.canvas.width = level.width;
+    this.canvas.height = level.height;
+    if (level.name) {
+      this.hudElements.title.textContent = `Flowgrid — ${level.name}`;
+    } else {
+      this.hudElements.title.textContent = 'Flowgrid';
+    }
+  }
+
+  loadLevel(level) {
+    this.applyLevel(level);
+    this.resetState();
   }
 
   resetState() {
@@ -271,10 +296,40 @@ export class FlowgridGame {
     this.hudElements.restartButton.addEventListener('click', () => this.restart());
   }
 
+  pause(showIndicator = true) {
+    if (this.paused) {
+      if (showIndicator) {
+        this.hudElements.pauseIndicator.style.display = 'block';
+        this.hudElements.pauseIndicator.textContent = 'Paused';
+      } else {
+        this.hudElements.pauseIndicator.style.display = 'none';
+      }
+      return;
+    }
+
+    this.paused = true;
+    if (showIndicator) {
+      this.hudElements.pauseIndicator.style.display = 'block';
+      this.hudElements.pauseIndicator.textContent = 'Paused';
+    } else {
+      this.hudElements.pauseIndicator.style.display = 'none';
+    }
+  }
+
+  resume() {
+    if (!this.paused) {
+      return;
+    }
+    this.paused = false;
+    this.hudElements.pauseIndicator.style.display = 'none';
+  }
+
   togglePause() {
-    this.paused = !this.paused;
-    this.hudElements.pauseIndicator.style.display = this.paused ? 'block' : 'none';
-    this.hudElements.pauseIndicator.textContent = 'Paused';
+    if (this.paused) {
+      this.resume();
+    } else {
+      this.pause();
+    }
   }
 
   restart() {

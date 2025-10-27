@@ -1,5 +1,7 @@
+/** @type {import('../types.js').LevelDefinition} */
 export const levelOne = {
   id: 'flowgrid-level-1',
+  name: 'Level 1',
   width: 1280,
   height: 720,
   seed: 1337,

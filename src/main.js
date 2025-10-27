@@ -1,5 +1,5 @@
 import { FlowgridGame } from './game/index.js';
-import { levelOne } from './level.js';
+import { getDefaultLevel, getLevelById, getLevels } from './levels/index.js';
 
 /** @type {HTMLDivElement | null} */
 const app = document.querySelector('#app');
@@ -29,6 +29,16 @@ const legend = document.createElement('div');
 legend.className = 'legend';
 container.appendChild(legend);
 
+const controlsBar = document.createElement('div');
+controlsBar.className = 'top-controls';
+container.appendChild(controlsBar);
+
+const newGameButton = document.createElement('button');
+newGameButton.type = 'button';
+newGameButton.className = 'top-controls__button';
+newGameButton.textContent = 'New Game';
+controlsBar.appendChild(newGameButton);
+
 const aiControls = document.createElement('div');
 aiControls.className = 'ai-controls';
 container.appendChild(aiControls);
@@ -57,6 +67,64 @@ endScreen.appendChild(endHeadline);
 endScreen.appendChild(restartButton);
 endScreen.style.display = 'none';
 container.appendChild(endScreen);
+
+const menuOverlay = document.createElement('div');
+menuOverlay.className = 'menu-overlay';
+container.appendChild(menuOverlay);
+
+const menu = document.createElement('div');
+menu.className = 'menu';
+menuOverlay.appendChild(menu);
+
+const menuTitle = document.createElement('h2');
+menuTitle.textContent = 'New Game';
+menu.appendChild(menuTitle);
+
+const menuForm = document.createElement('form');
+menuForm.className = 'menu__form';
+menu.appendChild(menuForm);
+
+const levelLabel = document.createElement('label');
+levelLabel.className = 'menu__label';
+levelLabel.htmlFor = 'level-select';
+levelLabel.textContent = 'Select Level';
+menuForm.appendChild(levelLabel);
+
+const levelSelect = document.createElement('select');
+levelSelect.id = 'level-select';
+levelSelect.name = 'level-select';
+menuForm.appendChild(levelSelect);
+
+const menuActions = document.createElement('div');
+menuActions.className = 'menu__actions';
+menuForm.appendChild(menuActions);
+
+const cancelButton = document.createElement('button');
+cancelButton.type = 'button';
+cancelButton.className = 'menu__cancel';
+cancelButton.textContent = 'Cancel';
+menuActions.appendChild(cancelButton);
+
+const startButton = document.createElement('button');
+startButton.type = 'submit';
+startButton.className = 'menu__start';
+startButton.textContent = 'Start Level';
+menuActions.appendChild(startButton);
+
+const availableLevels = getLevels();
+const defaultLevel = getDefaultLevel();
+if (!defaultLevel) {
+  throw new Error('No levels available.');
+}
+
+for (const level of availableLevels) {
+  const option = document.createElement('option');
+  option.value = level.id;
+  option.textContent = level.name;
+  levelSelect.appendChild(option);
+}
+
+let currentLevelId = defaultLevel.id;
 
 /** @type {import('./types.js').GameConfig} */
 const config = {
@@ -89,9 +157,11 @@ const game = new FlowgridGame(
     endHeadline,
     restartButton,
   },
-  levelOne,
+  defaultLevel,
   config,
 );
+
+game.start();
 
 for (const strategy of game.getAvailableStrategies()) {
   const option = document.createElement('option');
@@ -103,4 +173,55 @@ for (const strategy of game.getAvailableStrategies()) {
 aiSelect.value = game.getAiStrategyId();
 aiSelect.addEventListener('change', () => {
   game.setAiStrategy(aiSelect.value);
+});
+
+levelSelect.value = currentLevelId;
+
+let resumeAfterMenu = false;
+let wasPausedBeforeMenu = false;
+
+const closeMenu = ({ resume = resumeAfterMenu } = {}) => {
+  if (!menuOverlay.classList.contains('menu-overlay--visible')) {
+    return;
+  }
+  menuOverlay.classList.remove('menu-overlay--visible');
+  if (resume) {
+    game.resume();
+  } else if (wasPausedBeforeMenu) {
+    game.pause();
+  }
+  resumeAfterMenu = false;
+};
+
+const openMenu = ({ resumeOnClose = true } = {}) => {
+  if (menuOverlay.classList.contains('menu-overlay--visible')) {
+    return;
+  }
+  wasPausedBeforeMenu = game.isPaused();
+  resumeAfterMenu = resumeOnClose && !wasPausedBeforeMenu;
+  game.pause(false);
+  levelSelect.value = currentLevelId;
+  menuOverlay.classList.add('menu-overlay--visible');
+};
+
+newGameButton.addEventListener('click', () => {
+  openMenu({ resumeOnClose: true });
+});
+
+cancelButton.addEventListener('click', () => {
+  closeMenu();
+});
+
+menuForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const selectedLevel = getLevelById(levelSelect.value);
+  if (!selectedLevel) {
+    return;
+  }
+  currentLevelId = selectedLevel.id;
+  game.loadLevel(selectedLevel);
+  if (!game.isRunning()) {
+    game.start();
+  }
+  closeMenu({ resume: true });
 });
