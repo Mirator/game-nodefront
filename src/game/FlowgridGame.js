@@ -688,14 +688,23 @@ export class FlowgridGame {
   }
 
   checkVictory() {
-    const playerOwnsAll = Array.from(this.nodes.values()).every((node) => node.owner === 'player');
-    if (playerOwnsAll) {
+    let playerNodes = 0;
+    let aiNodes = 0;
+
+    for (const node of this.nodes.values()) {
+      if (node.owner === 'player') {
+        playerNodes += 1;
+      } else if (node.owner === 'ai') {
+        aiNodes += 1;
+      }
+    }
+
+    if (aiNodes === 0 && playerNodes > 0) {
       this.setWinner('player');
       return;
     }
 
-    const aiOwnsAll = Array.from(this.nodes.values()).every((node) => node.owner === 'ai');
-    if (aiOwnsAll) {
+    if (playerNodes === 0 && aiNodes > 0) {
       this.setWinner('ai');
     }
   }
