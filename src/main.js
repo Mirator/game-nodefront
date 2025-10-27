@@ -1,5 +1,5 @@
 import { FlowgridGame } from './game/index.js';
-import { getDefaultLevel, getLevelById, getLevels } from './levels/index.js';
+import { levelManager } from './levels/index.js';
 
 /** @type {HTMLDivElement | null} */
 const app = document.querySelector('#app');
@@ -111,8 +111,8 @@ startButton.className = 'menu__start';
 startButton.textContent = 'Start Level';
 menuActions.appendChild(startButton);
 
-const availableLevels = getLevels();
-const defaultLevel = getDefaultLevel();
+const availableLevels = levelManager.getLevels();
+const defaultLevel = levelManager.getDefaultLevel();
 if (!defaultLevel) {
   throw new Error('No levels available.');
 }
@@ -125,6 +125,7 @@ for (const level of availableLevels) {
 }
 
 let currentLevelId = defaultLevel.id;
+levelManager.setCurrentLevel(currentLevelId);
 
 /** @type {import('./types.js').GameConfig} */
 const config = {
@@ -214,14 +215,18 @@ cancelButton.addEventListener('click', () => {
 
 menuForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  const selectedLevel = getLevelById(levelSelect.value);
+  const selectedLevel = levelManager.getLevelById(levelSelect.value);
   if (!selectedLevel) {
     return;
   }
   currentLevelId = selectedLevel.id;
+  levelManager.setCurrentLevel(selectedLevel.id);
   game.loadLevel(selectedLevel);
   if (!game.isRunning()) {
     game.start();
   }
   closeMenu({ resume: true });
 });
+
+// Allow the player to choose their starting level immediately.
+openMenu({ resumeOnClose: false });
