@@ -1,0 +1,27 @@
+/** @type {import('../types.js').LevelDefinition} */
+export const levelEight = {
+  id: 'flowgrid-level-8',
+  name: 'Level 8 - Center Control',
+  width: 1280,
+  height: 720,
+  seed: 8080,
+  nodes: [
+    { id: 'n1', type: 'large', x: 180, y: 360, owner: 'player', energy: 160 },
+    { id: 'n2', type: 'medium', x: 300, y: 220, owner: 'player', energy: 100 },
+    { id: 'n3', type: 'medium', x: 300, y: 500, owner: 'player', energy: 100 },
+    { id: 'n4', type: 'small', x: 380, y: 320, owner: 'player', energy: 75 },
+    { id: 'n5', type: 'small', x: 380, y: 400, owner: 'player', energy: 75 },
+    { id: 'n6', type: 'small', x: 520, y: 160, owner: 'neutral', energy: 55 },
+    { id: 'n7', type: 'medium', x: 560, y: 260, owner: 'neutral', energy: 80 },
+    { id: 'n8', type: 'medium', x: 560, y: 460, owner: 'neutral', energy: 80 },
+    { id: 'n9', type: 'small', x: 520, y: 560, owner: 'neutral', energy: 55 },
+    { id: 'n10', type: 'medium', x: 680, y: 360, owner: 'neutral', energy: 85 },
+    { id: 'n11', type: 'small', x: 760, y: 240, owner: 'neutral', energy: 60 },
+    { id: 'n12', type: 'small', x: 760, y: 480, owner: 'neutral', energy: 60 },
+    { id: 'n13', type: 'medium', x: 820, y: 360, owner: 'neutral', energy: 85 },
+    { id: 'n14', type: 'medium', x: 940, y: 240, owner: 'ai', energy: 95 },
+    { id: 'n15', type: 'medium', x: 940, y: 480, owner: 'ai', energy: 95 },
+    { id: 'n16', type: 'large', x: 1060, y: 360, owner: 'ai', energy: 135 },
+    { id: 'n17', type: 'medium', x: 1180, y: 360, owner: 'ai', energy: 95 },
+  ],
+};

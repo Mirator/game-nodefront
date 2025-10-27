@@ -3,8 +3,24 @@ import { levelTwo } from './level-two.js';
 import { levelThree } from './level-three.js';
 import { levelFour } from './level-four.js';
 import { levelFive } from './level-five.js';
+import { levelSix } from './level-six.js';
+import { levelSeven } from './level-seven.js';
+import { levelEight } from './level-eight.js';
+import { levelNine } from './level-nine.js';
+import { levelTen } from './level-ten.js';
 
-const levelRegistry = [levelOne, levelTwo, levelThree, levelFour, levelFive];
+const levelRegistry = [
+  levelOne,
+  levelTwo,
+  levelThree,
+  levelFour,
+  levelFive,
+  levelSix,
+  levelSeven,
+  levelEight,
+  levelNine,
+  levelTen,
+];
 
 export class LevelManager {
   /**
@@ -57,4 +73,15 @@ export class LevelManager {
 
 export const levelManager = new LevelManager(levelRegistry);
 
-export { levelOne, levelTwo, levelThree, levelFour, levelFive };
+export {
+  levelOne,
+  levelTwo,
+  levelThree,
+  levelFour,
+  levelFive,
+  levelSix,
+  levelSeven,
+  levelEight,
+  levelNine,
+  levelTen,
+};
