@@ -29,10 +29,26 @@ export function starvesExistingLinks(game, source, perLinkAllocation, regenMulti
  * @param {number} perLinkAllocation
  * @param {number} surplus
  * @param {number} regenMultiplier
- * @param {(args: { target: import('../../types.js').NodeState; length: number; captureTime: number }) => number} scoringFn
+ * @param {(args: {
+ *   target: import('../../types.js').NodeState;
+ *   length: number;
+ *   captureTime: number;
+ *   random: () => number;
+ * }) => number} scoringFn
+ * @param {{ random?: () => number }} [options]
  */
-export function pickBestTarget(game, source, candidates, perLinkAllocation, surplus, regenMultiplier, scoringFn) {
+export function pickBestTarget(
+  game,
+  source,
+  candidates,
+  perLinkAllocation,
+  surplus,
+  regenMultiplier,
+  scoringFn,
+  options = {},
+) {
   let best = null;
+  const random = options.random ?? Math.random;
 
   for (const target of candidates) {
     if (target.id === source.id) continue;
@@ -70,7 +86,7 @@ export function pickBestTarget(game, source, candidates, perLinkAllocation, surp
       continue;
     }
 
-    const score = scoringFn({ target, length, captureTime });
+    const score = scoringFn({ target, length, captureTime, random });
     if (!best || score > best.score) {
       best = { target, score };
     }

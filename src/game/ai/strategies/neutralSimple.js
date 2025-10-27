@@ -69,12 +69,12 @@ export function neutralSimple(game) {
       perLinkAllocation,
       surplus,
       regenMultiplier,
-      ({ target, length, captureTime }) => {
+      ({ target, length, captureTime, random }) => {
         const incoming = game.incomingByNode.get(target.id) ?? [];
         const playerPressure = incoming.filter((link) => link.owner === 'player').length;
         const normalizedEnergy = target.capacity > 0 ? target.energy / target.capacity : 1;
         const timeWeight = 1 / captureTime;
-        const randomFactor = 1 + (Math.random() - 0.5) * 0.05;
+        const randomFactor = 1 + (random() - 0.5) * 0.05;
 
         if (target.owner === 'neutral') {
           const distanceWeight = 1 / (1 + length / 90);
@@ -88,6 +88,7 @@ export function neutralSimple(game) {
         const neutralBias = neutralNodes.length > 0 ? 0.9 : 1.25;
         return (target.capacity + 18) * distanceWeight * timeWeight * weakness * neutralBias * randomFactor;
       },
+      { random: game.random },
     );
 
     if (!bestTarget) {

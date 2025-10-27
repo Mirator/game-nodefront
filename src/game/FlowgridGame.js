@@ -21,6 +21,7 @@ import { update as updateImpl } from './flowgrid/update.js';
 import { captureNode as captureNodeImpl, checkVictory as checkVictoryImpl, setWinner as setWinnerImpl } from './flowgrid/victory.js';
 import { render as renderImpl } from './flowgrid/render.js';
 import { createPointerState } from './pointer.js';
+import { createSeededRng } from './math.js';
 
 export class FlowgridGame {
   /**
@@ -70,6 +71,13 @@ export class FlowgridGame {
     this.promptLastMessage = '';
     this.promptLastVariant = 'normal';
     this.promptTimeout = 0;
+
+    /** @type {number} */
+    this.randomSeed = 0;
+    /** @type {{ next: () => number }} */
+    this.randomGenerator = createSeededRng(this.randomSeed);
+    /** @type {() => number} */
+    this.random = () => this.randomGenerator.next();
 
     initializeAiState(this);
 

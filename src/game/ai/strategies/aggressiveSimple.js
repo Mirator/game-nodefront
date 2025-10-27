@@ -37,7 +37,7 @@ export function aggressiveSimple(game) {
       perLinkAllocation,
       surplus,
       regenMultiplier,
-      ({ target, length, captureTime }) => {
+      ({ target, length, captureTime, random }) => {
         const targetIsNeutral = target.owner === 'neutral';
         const targetIsPlayer = target.owner === 'player';
         const neutralsRemain = neutralCount > 0;
@@ -59,10 +59,11 @@ export function aggressiveSimple(game) {
         }
 
         const timeWeight = 1 / captureTime;
-        const randomFactor = 1 + (Math.random() - 0.5) * 0.05;
+        const randomFactor = 1 + (random() - 0.5) * 0.05;
 
         return baseValue * distanceWeight * weakness * ownershipBias * timeWeight * randomFactor;
       },
+      { random: game.random },
     );
 
     if (!bestTarget) {

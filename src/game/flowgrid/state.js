@@ -3,6 +3,7 @@
 /** @typedef {import('../../types.js').NodeState} NodeState */
 
 import { createPointerState } from '../pointer.js';
+import { createSeededRng, normalizeSeed } from '../math.js';
 import { DEFAULT_NODE_TYPE, NODE_TYPES } from '../nodeTypes.js';
 
 /**
@@ -32,7 +33,27 @@ export function loadLevel(game, level) {
 /**
  * @param {FlowgridGame} game
  */
+function deriveGameSeed(game) {
+  if (game.initialLevel && Number.isFinite(game.initialLevel.seed)) {
+    return normalizeSeed(game.initialLevel.seed);
+  }
+  if (Number.isFinite(game.config.captureSeed)) {
+    return normalizeSeed(game.config.captureSeed);
+  }
+  if (Number.isFinite(game.randomSeed)) {
+    return normalizeSeed(game.randomSeed);
+  }
+  return 0;
+}
+
+/**
+ * @param {FlowgridGame} game
+ */
 export function resetState(game) {
+  const seed = deriveGameSeed(game);
+  game.randomSeed = seed;
+  game.randomGenerator = createSeededRng(seed);
+
   game.nodes.clear();
   game.links.clear();
   game.outgoingByNode.clear();

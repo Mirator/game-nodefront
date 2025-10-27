@@ -26,7 +26,7 @@
  * @property {number} width
  * @property {number} height
  * @property {Array<NodeDefinition>} nodes
- * @property {number} seed
+ * @property {number} [seed]
  */
 
 /**
