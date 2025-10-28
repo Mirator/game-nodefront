@@ -5,5 +5,11 @@ export function createPointerState() {
     hoverNode: null,
     dragSource: null,
     isDragging: false,
+    shakeTimer: 0,
+    shakeDuration: 0,
+    shakeMagnitude: 0,
+    shakeSourceId: null,
+    shakeTargetX: 0,
+    shakeTargetY: 0,
   };
 }

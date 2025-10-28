@@ -56,6 +56,8 @@
  *   energy: number;
  *   owner: Faction;
  *   type: NodeTypeId;
+ *   flashTimer: number;
+ *   flashDuration: number;
  * }} NodeState
  */
 
