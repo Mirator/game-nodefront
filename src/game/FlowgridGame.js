@@ -24,6 +24,13 @@ import { createSeededRng } from './math.js';
 
 const DEFAULT_MAX_FRAME_DELTA = 0.25;
 
+const ENERGY_CHART_COLORS = {
+  player: '#2563eb',
+  'ai-red': '#dc2626',
+  'ai-purple': '#7c3aed',
+  neutral: '#4b5563',
+};
+
 export class FlowgridGame {
   /**
    * @param {HTMLCanvasElement} canvas
@@ -41,6 +48,8 @@ export class FlowgridGame {
    *     'ai-purple': HTMLElement;
    *     neutral: HTMLElement;
    *   };
+   *   energyChart: HTMLDivElement;
+   *   energyTotal: HTMLDivElement;
    * }} hudElements
    * @param {LevelDefinition} level
    * @param {GameConfig} config
@@ -249,7 +258,7 @@ export class FlowgridGame {
   }
 
   updateEnergySummary() {
-    const energyValues = this.hudElements.energyValues;
+    const { energyValues, energyChart, energyTotal } = this.hudElements;
     if (!energyValues) {
       return;
     }
@@ -268,6 +277,33 @@ export class FlowgridGame {
       const valueElement = energyValues[faction];
       if (valueElement) {
         valueElement.textContent = String(Math.round(totals[faction] ?? 0));
+      }
+    }
+
+    const totalEnergy = factions.reduce((sum, faction) => sum + (totals[faction] ?? 0), 0);
+    if (energyTotal) {
+      energyTotal.textContent = String(Math.round(totalEnergy));
+    }
+
+    if (energyChart) {
+      if (totalEnergy > 0) {
+        let startAngle = 0;
+        const segments = [];
+        for (const faction of factions) {
+          const value = totals[faction] ?? 0;
+          if (value <= 0) {
+            continue;
+          }
+
+          const angle = (value / totalEnergy) * 360;
+          const endAngle = startAngle + angle;
+          const color = ENERGY_CHART_COLORS[faction] ?? '#e2e8f0';
+          segments.push(`${color} ${startAngle}deg ${endAngle}deg`);
+          startAngle = endAngle;
+        }
+        energyChart.style.background = `conic-gradient(${segments.join(', ')})`;
+      } else {
+        energyChart.style.background = 'conic-gradient(#e2e8f0 0deg 360deg)';
       }
     }
   }
