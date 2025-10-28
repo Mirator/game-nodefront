@@ -38,13 +38,21 @@ export class LevelManager {
    */
   constructor(levels) {
     this.levels = levels;
-    this.currentLevelId = levels[0]?.id ?? null;
+    /** @type {Set<string>} */
+    this.unlockedLevelIds = new Set();
+    const firstLevelId = levels[0]?.id ?? null;
+    if (firstLevelId) {
+      this.unlockedLevelIds.add(firstLevelId);
+    }
+    /** @type {string | null} */
+    this.currentLevelId = firstLevelId;
   }
 
   getLevels() {
     return this.levels.map((level) => ({
       id: level.id,
       name: level.name,
+      locked: !this.isLevelUnlocked(level.id),
     }));
   }
 
@@ -57,15 +65,17 @@ export class LevelManager {
   }
 
   getCurrentLevel() {
-    if (this.currentLevelId) {
+    if (this.currentLevelId && this.isLevelUnlocked(this.currentLevelId)) {
       const currentLevel = this.getLevelById(this.currentLevelId);
       if (currentLevel) {
         return currentLevel;
       }
     }
-    const fallback = this.getDefaultLevel();
+
+    const fallback =
+      this.levels.find((level) => this.isLevelUnlocked(level.id)) ?? this.getDefaultLevel();
     this.currentLevelId = fallback?.id ?? null;
-    return fallback;
+    return fallback ?? null;
   }
 
   /**
@@ -73,11 +83,69 @@ export class LevelManager {
    */
   setCurrentLevel(levelId) {
     const level = this.getLevelById(levelId);
-    if (!level) {
+    if (!level || !this.isLevelUnlocked(level.id)) {
       return null;
     }
     this.currentLevelId = level.id;
     return level;
+  }
+
+  /**
+   * @param {string} levelId
+   * @returns {boolean}
+   */
+  unlockLevel(levelId) {
+    const level = this.getLevelById(levelId);
+    if (!level || this.isLevelUnlocked(level.id)) {
+      return false;
+    }
+    this.unlockedLevelIds.add(level.id);
+    if (!this.currentLevelId) {
+      this.currentLevelId = level.id;
+    }
+    return true;
+  }
+
+  /**
+   * @param {ReadonlyArray<string>} levelIds
+   */
+  setUnlockedLevels(levelIds) {
+    const validIds = new Set(this.levels.map((level) => level.id));
+    this.unlockedLevelIds.clear();
+    for (const id of levelIds) {
+      if (validIds.has(id)) {
+        this.unlockedLevelIds.add(id);
+      }
+    }
+
+    if (this.unlockedLevelIds.size === 0) {
+      const fallback = this.getDefaultLevel();
+      if (fallback) {
+        this.unlockedLevelIds.add(fallback.id);
+      }
+    }
+
+    if (!this.currentLevelId || !this.isLevelUnlocked(this.currentLevelId)) {
+      const current = this.getCurrentLevel();
+      this.currentLevelId = current?.id ?? null;
+    }
+  }
+
+  /**
+   * @returns {string[]}
+   */
+  getUnlockedLevelIds() {
+    return this.levels
+      .filter((level) => this.unlockedLevelIds.has(level.id))
+      .map((level) => level.id);
+  }
+
+  /**
+   * @param {string} levelId
+   * @returns {boolean}
+   */
+  isLevelUnlocked(levelId) {
+    return this.unlockedLevelIds.has(levelId);
   }
 }
 
