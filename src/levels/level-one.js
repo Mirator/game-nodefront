@@ -6,7 +6,7 @@ export const levelOne = {
   height: 720,
   seed: 1337,
   nodes: [
-    { id: 'n1', type: 'large', x: 320, y: 360, owner: 'player', energy: 140 },
-    { id: 'n2', type: 'small', x: 960, y: 360, owner: 'ai', energy: 40 },
+    { id: 'n1', type: 'large', x: 400, y: 360, owner: 'player', energy: 140 },
+    { id: 'n2', type: 'small', x: 860, y: 360, owner: 'ai', energy: 40 },
   ],
 };
