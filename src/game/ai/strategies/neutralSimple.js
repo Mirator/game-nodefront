@@ -1,15 +1,19 @@
 import { pickBestTarget, starvesExistingLinks } from '../shared.js';
 import { distance } from '../../math.js';
+import { isAiFaction } from '../../constants.js';
 
 /**
  * @param {import('../../FlowgridGame.js').FlowgridGame} game
+ * @param {{ faction: import('../../../types.js').Faction }} context
  */
-export function neutralSimple(game) {
+export function neutralSimple(game, { faction }) {
   const regenMultiplier = game.config.regenRateMultiplier ?? 1;
   const allNodes = Array.from(game.nodes.values());
-  const aiNodes = allNodes.filter((node) => node.owner === 'ai');
+  const aiNodes = allNodes.filter((node) => node.owner === faction);
   const neutralNodes = allNodes.filter((node) => node.owner === 'neutral');
   const playerNodes = allNodes.filter((node) => node.owner === 'player');
+  const rivalAiNodes = allNodes.filter((node) => isAiFaction(node.owner) && node.owner !== faction);
+  const opponentNodes = [...playerNodes, ...rivalAiNodes];
 
   for (const source of aiNodes) {
     const surplus = source.energy - source.safetyReserve;
@@ -48,14 +52,14 @@ export function neutralSimple(game) {
     if (neutralNodes.length > 0) {
       candidates.push(...neutralNodes);
       const distanceGate = Number.isFinite(nearestNeutralDistance) ? nearestNeutralDistance : Infinity;
-      for (const player of playerNodes) {
-        const playerDistance = distance(source.x, source.y, player.x, player.y);
-        if (playerDistance <= distanceGate * 1.15) {
-          candidates.push(player);
+      for (const opponent of opponentNodes) {
+        const opponentDistance = distance(source.x, source.y, opponent.x, opponent.y);
+        if (opponentDistance <= distanceGate * 1.15) {
+          candidates.push(opponent);
         }
       }
     } else {
-      candidates.push(...playerNodes);
+      candidates.push(...opponentNodes);
     }
 
     if (candidates.length === 0) {
@@ -71,14 +75,14 @@ export function neutralSimple(game) {
       regenMultiplier,
       ({ target, length, captureTime, random }) => {
         const incoming = game.incomingByNode.get(target.id) ?? [];
-        const playerPressure = incoming.filter((link) => link.owner === 'player').length;
+        const opponentPressure = incoming.filter((link) => link.owner !== faction && link.owner !== target.owner).length;
         const normalizedEnergy = target.capacity > 0 ? target.energy / target.capacity : 1;
         const timeWeight = 1 / captureTime;
         const randomFactor = 1 + (random() - 0.5) * 0.05;
 
         if (target.owner === 'neutral') {
           const distanceWeight = 1 / (1 + length / 90);
-          const contestBonus = playerPressure > 0 ? 2 + playerPressure * 0.5 : 1;
+          const contestBonus = opponentPressure > 0 ? 2 + opponentPressure * 0.5 : 1;
           const vulnerability = 1 + (1 - Math.min(1, normalizedEnergy)) * 0.8;
           return (target.capacity + 20) * distanceWeight * timeWeight * contestBonus * vulnerability * randomFactor;
         }
@@ -95,6 +99,6 @@ export function neutralSimple(game) {
       continue;
     }
 
-    game.queueAiLink(source.id, bestTarget.id);
+    game.queueAiLink(faction, source.id, bestTarget.id);
   }
 }

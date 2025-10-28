@@ -1,6 +1,7 @@
 /** @typedef {import('../FlowgridGame.js').FlowgridGame} FlowgridGame */
 /** @typedef {import('../../types.js').Faction} Faction */
 /** @typedef {import('../../types.js').NodeState} NodeState */
+import { isAiFaction } from '../constants.js';
 
 /**
  * @param {FlowgridGame} game
@@ -11,9 +12,10 @@ export function captureNode(game, node, newOwner) {
   node.owner = newOwner;
   node.energy = game.config.captureSeed;
 
-  if (newOwner === 'ai') {
-    if (game.aiNodeAttackDelay > 0) {
-      game.aiNodeAttackCooldown.set(node.id, game.aiNodeAttackDelay);
+  if (isAiFaction(newOwner)) {
+    const controller = game.aiControllers?.get(newOwner);
+    if (controller && controller.nodeAttackDelay > 0) {
+      game.aiNodeAttackCooldown.set(node.id, controller.nodeAttackDelay);
     } else {
       game.aiNodeAttackCooldown.delete(node.id);
     }
@@ -32,23 +34,33 @@ export function captureNode(game, node, newOwner) {
  */
 export function checkVictory(game) {
   let playerNodes = 0;
-  let aiNodes = 0;
+  let totalAiNodes = 0;
+  let leadingFaction = null;
+  let leadingCount = 0;
+  /** @type {Map<Faction, number>} */
+  const aiCounts = new Map();
 
   for (const node of game.nodes.values()) {
     if (node.owner === 'player') {
       playerNodes += 1;
-    } else if (node.owner === 'ai') {
-      aiNodes += 1;
+    } else if (isAiFaction(node.owner)) {
+      totalAiNodes += 1;
+      const updated = (aiCounts.get(node.owner) ?? 0) + 1;
+      aiCounts.set(node.owner, updated);
+      if (updated > leadingCount) {
+        leadingCount = updated;
+        leadingFaction = node.owner;
+      }
     }
   }
 
-  if (aiNodes === 0 && playerNodes > 0) {
+  if (totalAiNodes === 0 && playerNodes > 0) {
     game.setWinner('player');
     return;
   }
 
-  if (playerNodes === 0 && aiNodes > 0) {
-    game.setWinner('ai');
+  if (playerNodes === 0 && totalAiNodes > 0 && leadingFaction) {
+    game.setWinner(leadingFaction);
   }
 }
 

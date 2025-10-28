@@ -3,6 +3,7 @@
 /** @typedef {import('../../types.js').NodeState} NodeState */
 
 import { clamp, distance, distanceToSegment } from '../math.js';
+import { isAiFaction } from '../constants.js';
 
 const LINK_FAILURE_MESSAGES = {
   duplicate: 'Route already exists.',
@@ -94,10 +95,10 @@ export function createLink(game, sourceId, targetId) {
 
   if (game.winner) return;
 
-  if (source.owner !== 'player' && source.owner !== 'ai') return;
+  if (source.owner !== 'player' && !isAiFaction(source.owner)) return;
   if (source.owner === 'player' && game.winner) return;
 
-  if (source.owner === 'ai') {
+  if (isAiFaction(source.owner)) {
     const remaining = game.aiNodeAttackCooldown.get(sourceId);
     if (remaining && remaining > 0) {
       return;
@@ -152,8 +153,11 @@ export function createLink(game, sourceId, targetId) {
     existing.share = equalShare;
   }
   link.share = equalShare;
-  if (source.owner === 'ai' && game.aiNodeAttackDelay > 0) {
-    game.aiNodeAttackCooldown.set(sourceId, game.aiNodeAttackDelay);
+  if (isAiFaction(source.owner)) {
+    const controller = game.aiControllers?.get(source.owner);
+    if (controller && controller.nodeAttackDelay > 0) {
+      game.aiNodeAttackCooldown.set(sourceId, controller.nodeAttackDelay);
+    }
   }
 }
 

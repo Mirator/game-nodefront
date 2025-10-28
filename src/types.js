@@ -1,5 +1,5 @@
 /**
- * @typedef {'player' | 'ai' | 'neutral'} Faction
+ * @typedef {'player' | 'neutral' | 'ai-red' | 'ai-purple'} Faction
  */
 
 /**
@@ -32,7 +32,8 @@
  * @property {number} [default]
  * @property {Partial<Record<NodeTypeId, number>>} [defaults]
  * @property {OwnerEnergyConfig} [player]
- * @property {OwnerEnergyConfig} [ai]
+ * @property {OwnerEnergyConfig} ['ai-red']
+ * @property {OwnerEnergyConfig} ['ai-purple']
  * @property {OwnerEnergyConfig} [neutral]
  * @property {Record<string, number>} [overrides]
  */

@@ -1,12 +1,14 @@
 import { pickBestTarget, starvesExistingLinks } from '../shared.js';
+import { isAiFaction } from '../../constants.js';
 
 /**
  * @param {import('../../FlowgridGame.js').FlowgridGame} game
+ * @param {{ faction: import('../../../types.js').Faction }} context
  */
-export function aggressiveSimple(game) {
+export function aggressiveSimple(game, { faction }) {
   const regenMultiplier = game.config.regenRateMultiplier ?? 1;
   const allNodes = Array.from(game.nodes.values());
-  const aiNodes = allNodes.filter((node) => node.owner === 'ai');
+  const aiNodes = allNodes.filter((node) => node.owner === faction);
   const neutralCount = allNodes.reduce((count, node) => (node.owner === 'neutral' ? count + 1 : count), 0);
   for (const source of aiNodes) {
     const surplus = source.energy - source.safetyReserve;
@@ -40,21 +42,22 @@ export function aggressiveSimple(game) {
       ({ target, length, captureTime, random }) => {
         const targetIsNeutral = target.owner === 'neutral';
         const targetIsPlayer = target.owner === 'player';
+        const targetIsEnemyAi = isAiFaction(target.owner) && target.owner !== faction;
         const neutralsRemain = neutralCount > 0;
 
-        const baseValue = target.capacity + (targetIsPlayer ? 18 : 24);
+        const baseValue = target.capacity + (targetIsPlayer || targetIsEnemyAi ? 18 : 24);
         const distanceScale = targetIsNeutral && neutralsRemain ? 70 : 110;
         const distanceWeight = 1 / (1 + length / distanceScale);
 
         const normalizedEnergy = target.capacity > 0 ? target.energy / target.capacity : 1;
-        const weakness = targetIsPlayer
-          ? 1 + (1 - Math.min(1, normalizedEnergy)) * 1.6
-          : 1 + (1 - Math.min(1, normalizedEnergy)) * 0.6;
+        const opponentWeaknessBoost = 1 + (1 - Math.min(1, normalizedEnergy)) * 1.6;
+        const neutralWeakness = 1 + (1 - Math.min(1, normalizedEnergy)) * 0.6;
+        const weakness = targetIsPlayer || targetIsEnemyAi ? opponentWeaknessBoost : neutralWeakness;
 
         let ownershipBias = 1;
         if (targetIsNeutral) {
           ownershipBias = neutralsRemain ? 2.6 : 1.3;
-        } else if (targetIsPlayer) {
+        } else if (targetIsPlayer || targetIsEnemyAi) {
           ownershipBias = neutralsRemain ? 0.75 : 1.6;
         }
 
@@ -70,6 +73,6 @@ export function aggressiveSimple(game) {
       continue;
     }
 
-    game.queueAiLink(source.id, bestTarget.id);
+    game.queueAiLink(faction, source.id, bestTarget.id);
   }
 }

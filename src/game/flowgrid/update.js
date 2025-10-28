@@ -162,10 +162,18 @@ export function update(game, dt) {
     }
   }
 
-  game.aiCooldown -= dt;
-  if (game.aiCooldown <= 0 && !game.winner) {
-    game.runAiTurn();
-    game.aiCooldown = game.aiTurnInterval;
+  if (game.aiControllers && game.aiControllers.size > 0 && !game.winner) {
+    for (const controller of game.aiControllers.values()) {
+      const interval = controller.turnInterval > 0 ? controller.turnInterval : 0.35;
+      controller.cooldown -= dt;
+      while (controller.cooldown <= 0) {
+        game.runAiTurn(controller.faction);
+        controller.cooldown += interval;
+        if (interval <= 0 || game.winner) {
+          break;
+        }
+      }
+    }
   }
 
   game.checkVictory();

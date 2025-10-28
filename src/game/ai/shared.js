@@ -10,7 +10,7 @@ export function starvesExistingLinks(game, source, perLinkAllocation, regenMulti
   const outgoing = game.outgoingByNode.get(source.id) ?? [];
   for (const link of outgoing) {
     const target = game.nodes.get(link.targetId);
-    if (!target || target.owner === 'ai') {
+    if (!target || target.owner === source.owner) {
       continue;
     }
     const effectiveRate = Math.min(link.maxRate, perLinkAllocation);
@@ -52,7 +52,7 @@ export function pickBestTarget(
 
   for (const target of candidates) {
     if (target.id === source.id) continue;
-    if (target.owner === 'ai') continue;
+    if (target.owner === source.owner) continue;
 
     const length = distance(source.x, source.y, target.x, target.y);
     const speedFactor = clamp(1 - length * game.config.distanceLoss, game.config.efficiencyFloor, 1);
@@ -64,7 +64,7 @@ export function pickBestTarget(
 
     const targetRegen = target.regen * regenMultiplier;
     const cooperatingLinks = (game.incomingByNode.get(target.id) ?? []).filter(
-      (link) => link.owner === 'ai' && link.sourceId !== source.id,
+      (link) => link.owner === source.owner && link.sourceId !== source.id,
     );
     const existingSupportRate = cooperatingLinks.reduce((acc, link) => {
       if (link.establishing) return acc;

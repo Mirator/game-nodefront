@@ -9,12 +9,12 @@ export const levelTwo = {
   initialEnergy: {
     player: { large: 140 },
     neutral: { small: 55 },
-    ai: { small: 65 },
+    'ai-red': { small: 65 },
   },
   nodes: [
     { id: 'n1', type: 'large', x: 280, y: 360, owner: 'player' },
     { id: 'n2', type: 'small', x: 540, y: 280, owner: 'neutral' },
     { id: 'n3', type: 'small', x: 540, y: 440, owner: 'neutral' },
-    { id: 'n4', type: 'small', x: 940, y: 360, owner: 'ai' },
+    { id: 'n4', type: 'small', x: 940, y: 360, owner: 'ai-red' },
   ],
 };
