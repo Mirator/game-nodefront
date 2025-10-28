@@ -77,6 +77,9 @@ export class FlowgridGame {
     this.promptLastVariant = 'normal';
     this.promptTimeout = 0;
 
+    /** @type {((faction: Faction) => void) | null} */
+    this.winnerListener = null;
+
     /** @type {number} */
     this.randomSeed = 0;
     /** @type {{ next: () => number }} */
@@ -228,6 +231,16 @@ export class FlowgridGame {
 
   setWinner(faction) {
     setWinnerImpl(this, faction);
+    if (this.winnerListener) {
+      this.winnerListener(faction);
+    }
+  }
+
+  /**
+   * @param {((faction: Faction) => void) | null} listener
+   */
+  setOnWinnerChange(listener) {
+    this.winnerListener = typeof listener === 'function' ? listener : null;
   }
 
   render() {

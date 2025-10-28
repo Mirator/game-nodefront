@@ -1,5 +1,5 @@
 /**
- * @typedef {{ id: string; name: string }} LevelSummary
+ * @typedef {{ id: string; name: string; locked?: boolean }} LevelSummary
  */
 
 /**
@@ -72,11 +72,12 @@ export function createMenu(root) {
   const selectLevel = (levelId) => {
     const button = levelButtons.get(levelId);
     if (!button || isLocked(button)) {
-      return;
+      return false;
     }
     currentLevelId = levelId;
     applySelectionState();
     onLevelSelected(currentLevelId);
+    return true;
   };
 
   const open = () => {
@@ -90,12 +91,15 @@ export function createMenu(root) {
   const setLevels = (levels, { selectedLevelId } = {}) => {
     levelGrid.innerHTML = '';
     levelButtons.clear();
-    levelOrder = levels.slice();
+    levelOrder = levels.map((level) => ({ ...level }));
 
     levels.forEach((level, index) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'menu__level-button';
+      if (level.locked) {
+        button.classList.add('menu__level-button--locked');
+      }
       button.dataset.levelId = level.id;
       button.setAttribute('aria-pressed', 'false');
       button.setAttribute('aria-disabled', 'false');
@@ -125,10 +129,25 @@ export function createMenu(root) {
       levelGrid.appendChild(button);
     });
 
-    const initialSelection = selectedLevelId ?? levels[0]?.id ?? '';
-    if (initialSelection) {
-      selectLevel(initialSelection);
-    } else {
+    const firstUnlockedId = levelOrder.find((level) => !level.locked)?.id ?? '';
+    /** @type {string[]} */
+    const selectionCandidates = [];
+    for (const candidate of [selectedLevelId, currentLevelId, firstUnlockedId]) {
+      if (candidate && !selectionCandidates.includes(candidate)) {
+        selectionCandidates.push(candidate);
+      }
+    }
+
+    let selectionApplied = false;
+    for (const candidate of selectionCandidates) {
+      if (selectLevel(candidate)) {
+        selectionApplied = true;
+        break;
+      }
+    }
+
+    if (!selectionApplied) {
+      currentLevelId = '';
       applySelectionState();
     }
   };
@@ -136,7 +155,16 @@ export function createMenu(root) {
   const getSelectedLevelId = () => currentLevelId;
 
   const setCurrentLevel = (levelId) => {
-    selectLevel(levelId);
+    if (selectLevel(levelId)) {
+      return;
+    }
+    const fallbackId = levelOrder.find((level) => !level.locked)?.id ?? '';
+    if (fallbackId) {
+      selectLevel(fallbackId);
+    } else {
+      currentLevelId = '';
+      applySelectionState();
+    }
   };
 
   const getNextLevelId = (levelId = currentLevelId) => {

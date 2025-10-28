@@ -97,6 +97,12 @@ export function createHud(root) {
   aiFootnote.style.display = 'none';
   container.appendChild(aiFootnote);
 
+  const godModeIndicator = document.createElement('div');
+  godModeIndicator.className = 'god-mode-indicator';
+  godModeIndicator.textContent = 'God Mode';
+  godModeIndicator.setAttribute('aria-hidden', 'true');
+  container.appendChild(godModeIndicator);
+
   const endScreen = document.createElement('div');
   endScreen.className = 'end-screen';
   const endHeadline = document.createElement('h1');
@@ -126,6 +132,13 @@ export function createHud(root) {
     }
   };
 
+  const setGodModeIndicator = (enabled) => {
+    godModeIndicator.classList.toggle('god-mode-indicator--visible', enabled);
+    godModeIndicator.setAttribute('aria-hidden', enabled ? 'false' : 'true');
+  };
+
+  setGodModeIndicator(false);
+
   return {
     container,
     canvas,
@@ -143,5 +156,6 @@ export function createHud(root) {
     nextLevelButton,
     endScreen,
     setAiStrategyLabel,
+    setGodModeIndicator,
   };
 }
