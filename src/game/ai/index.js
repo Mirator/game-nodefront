@@ -1,5 +1,6 @@
 import { aggressiveSimple } from './strategies/aggressiveSimple.js';
 import { neutralSimple } from './strategies/neutralSimple.js';
+import { slowSimple } from './strategies/slowSimple.js';
 
 export const DEFAULT_STRATEGY_ID = 'neutral-simple';
 
@@ -8,11 +9,31 @@ export const AI_STRATEGIES = {
     id: 'neutral-simple',
     label: 'Neutral Focus (Simple)',
     run: neutralSimple,
+    timing: {
+      turnInterval: 0.4,
+      initialDelay: 0.5,
+      nodeAttackDelay: 1,
+    },
   },
   'aggressive-simple': {
     id: 'aggressive-simple',
     label: 'Aggressive (Simple)',
     run: aggressiveSimple,
+    timing: {
+      turnInterval: 0.3,
+      initialDelay: 0.45,
+      nodeAttackDelay: 0.75,
+    },
+  },
+  'slow-simple': {
+    id: 'slow-simple',
+    label: 'Deliberate (Slow)',
+    run: slowSimple,
+    timing: {
+      turnInterval: 0.8,
+      initialDelay: 1.1,
+      nodeAttackDelay: 1.6,
+    },
   },
 };
 

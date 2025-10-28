@@ -5,6 +5,7 @@ export const levelFive = {
   width: 1280,
   height: 720,
   seed: 5150,
+  aiStrategyId: 'slow-simple',
   nodes: [
     { id: 'n1', type: 'large', x: 200, y: 360, owner: 'player', energy: 150 },
     { id: 'n2', type: 'medium', x: 320, y: 240, owner: 'player', energy: 95 },
