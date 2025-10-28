@@ -30,9 +30,9 @@ export const AI_STRATEGIES = {
     label: 'Deliberate (Slow)',
     run: slowSimple,
     timing: {
-      turnInterval: 0.8,
-      initialDelay: 1.1,
-      nodeAttackDelay: 1.6,
+      turnInterval: 1.8,
+      initialDelay: 2.4,
+      nodeAttackDelay: 3.2,
     },
   },
 };
