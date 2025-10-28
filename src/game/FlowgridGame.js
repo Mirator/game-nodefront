@@ -23,6 +23,8 @@ import { render as renderImpl } from './flowgrid/render.js';
 import { createPointerState } from './pointer.js';
 import { createSeededRng } from './math.js';
 
+const DEFAULT_MAX_FRAME_DELTA = 0.25;
+
 export class FlowgridGame {
   /**
    * @param {HTMLCanvasElement} canvas
@@ -79,10 +81,14 @@ export class FlowgridGame {
     /** @type {() => number} */
     this.random = () => this.randomGenerator.next();
 
+    this.maxFrameDelta =
+      typeof config.maxFrameDelta === 'number' ? config.maxFrameDelta : DEFAULT_MAX_FRAME_DELTA;
+
     initializeAiState(this);
 
     this.loop = (timestamp) => {
-      const delta = (timestamp - this.lastTimestamp) / 1000;
+      const rawDelta = (timestamp - this.lastTimestamp) / 1000;
+      const delta = Math.min(Math.max(rawDelta, 0), this.maxFrameDelta);
       this.lastTimestamp = timestamp;
 
       if (!this.paused && !this.winner) {
@@ -128,6 +134,8 @@ export class FlowgridGame {
 
   resetState() {
     resetStateImpl(this);
+    this.accumulator = 0;
+    this.lastTimestamp = 0;
   }
 
   clearPromptTimeout() {
