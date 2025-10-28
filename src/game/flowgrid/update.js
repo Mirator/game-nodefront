@@ -80,13 +80,22 @@ export function update(game, dt) {
         continue;
       }
 
-      node.energy = Math.max(0, node.energy - transfer);
-
-      const delivered = transfer * link.efficiency;
       const target = game.nodes.get(link.targetId);
       if (!target) continue;
 
+      let actualTransfer = transfer;
+      let delivered = transfer * link.efficiency;
+
       if (target.owner === link.owner) {
+        const capacityRemaining = Math.max(0, target.capacity - target.energy);
+        if (capacityRemaining <= 0) {
+          link.smoothedRate = link.smoothedRate * 0.8;
+          continue;
+        }
+        if (delivered > capacityRemaining) {
+          delivered = capacityRemaining;
+          actualTransfer = link.efficiency > 0 ? delivered / link.efficiency : 0;
+        }
         target.energy = Math.min(target.capacity, target.energy + delivered);
       } else {
         const defenderEnergyBefore = target.energy;
@@ -96,7 +105,12 @@ export function update(game, dt) {
         }
       }
 
-      link.smoothedRate = link.smoothedRate * 0.8 + rate * 0.2;
+      if (actualTransfer > 0) {
+        node.energy = Math.max(0, node.energy - actualTransfer);
+      }
+
+      const actualRate = dt > 0 ? actualTransfer / dt : 0;
+      link.smoothedRate = link.smoothedRate * 0.8 + actualRate * 0.2;
     }
   }
 
