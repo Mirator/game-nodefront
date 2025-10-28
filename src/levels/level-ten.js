@@ -1,7 +1,7 @@
 /** @type {import('../types.js').LevelDefinition} */
 export const levelTen = {
   id: 'flowgrid-level-10',
-  name: 'Level 10 - Calm Finale',
+  name: 'Level 10 - Twin Pressure',
   width: 1280,
   height: 720,
   seed: 10010,
@@ -9,10 +9,12 @@ export const levelTen = {
   initialEnergy: {
     player: { large: 170, medium: 110, small: 80 },
     neutral: { small: 60, medium: 85 },
-    ai: { medium: 95, large: 140 },
+    'ai-red': { medium: 95, large: 135 },
+    'ai-purple': { medium: 95, large: 135 },
     overrides: {
-      n15: 100,
-      n16: 100,
+      n15: 105,
+      n16: 105,
+      n17: 140,
     },
   },
   nodes: [
@@ -27,10 +29,11 @@ export const levelTen = {
     { id: 'n9', type: 'small', x: 500, y: 500, owner: 'neutral' },
     { id: 'n10', type: 'medium', x: 660, y: 300, owner: 'neutral' },
     { id: 'n11', type: 'medium', x: 660, y: 460, owner: 'neutral' },
-    { id: 'n12', type: 'medium', x: 820, y: 260, owner: 'ai' },
-    { id: 'n13', type: 'medium', x: 820, y: 460, owner: 'ai' },
-    { id: 'n14', type: 'large', x: 960, y: 360, owner: 'ai' },
-    { id: 'n15', type: 'medium', x: 1080, y: 300, owner: 'ai' },
-    { id: 'n16', type: 'medium', x: 1080, y: 420, owner: 'ai' },
+    { id: 'n12', type: 'medium', x: 820, y: 260, owner: 'ai-red' },
+    { id: 'n13', type: 'medium', x: 820, y: 460, owner: 'ai-purple' },
+    { id: 'n14', type: 'large', x: 960, y: 300, owner: 'ai-red' },
+    { id: 'n15', type: 'medium', x: 1080, y: 240, owner: 'ai-red' },
+    { id: 'n16', type: 'medium', x: 1080, y: 480, owner: 'ai-purple' },
+    { id: 'n17', type: 'large', x: 960, y: 420, owner: 'ai-purple' },
   ],
 };

@@ -9,7 +9,7 @@ export const levelEight = {
   initialEnergy: {
     player: { large: 160, medium: 100, small: 75 },
     neutral: { small: 55, medium: 80 },
-    ai: { medium: 95, large: 135 },
+    'ai-red': { medium: 95, large: 135 },
     overrides: {
       n9: 85,
     },
@@ -24,8 +24,8 @@ export const levelEight = {
     { id: 'n7', type: 'medium', x: 560, y: 420, owner: 'neutral' },
     { id: 'n8', type: 'small', x: 520, y: 520, owner: 'neutral' },
     { id: 'n9', type: 'medium', x: 680, y: 360, owner: 'neutral' },
-    { id: 'n10', type: 'medium', x: 900, y: 260, owner: 'ai' },
-    { id: 'n11', type: 'medium', x: 900, y: 460, owner: 'ai' },
-    { id: 'n12', type: 'large', x: 1020, y: 360, owner: 'ai' },
+    { id: 'n10', type: 'medium', x: 900, y: 260, owner: 'ai-red' },
+    { id: 'n11', type: 'medium', x: 900, y: 460, owner: 'ai-red' },
+    { id: 'n12', type: 'large', x: 1020, y: 360, owner: 'ai-red' },
   ],
 };

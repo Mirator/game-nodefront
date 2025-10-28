@@ -5,6 +5,8 @@
 import { createPointerState } from '../pointer.js';
 import { createSeededRng, normalizeSeed } from '../math.js';
 import { DEFAULT_NODE_TYPE, NODE_TYPES } from '../nodeTypes.js';
+import { isAiFaction } from '../constants.js';
+import { prepareAiControllersForLevel } from './ai.js';
 
 /**
  * @param {LevelDefinition} level
@@ -90,12 +92,10 @@ export function resetState(game) {
   game.lastTimestamp = performance.now();
   game.paused = false;
   game.winner = null;
-  game.aiCooldown = game.aiInitialDelay;
   game.aiNodeAttackCooldown.clear();
-  game.aiActionQueue.length = 0;
-  game.aiActionSequence = 0;
   game.elapsedTime = 0;
-  game.aiTurnBudget = null;
+
+  prepareAiControllersForLevel(game);
 
   for (const definition of game.initialLevel.nodes) {
     const type = definition.type ?? DEFAULT_NODE_TYPE;
@@ -120,8 +120,11 @@ export function resetState(game) {
       flashDuration: 0,
     };
     game.nodes.set(node.id, node);
-    if (node.owner === 'ai' && game.aiNodeAttackDelay > 0) {
-      game.aiNodeAttackCooldown.set(node.id, game.aiNodeAttackDelay);
+    if (isAiFaction(node.owner)) {
+      const controller = game.aiControllers?.get(node.owner);
+      if (controller && controller.nodeAttackDelay > 0) {
+        game.aiNodeAttackCooldown.set(node.id, controller.nodeAttackDelay);
+      }
     }
   }
 

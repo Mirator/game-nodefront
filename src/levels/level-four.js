@@ -9,7 +9,7 @@ export const levelFour = {
   initialEnergy: {
     player: { large: 150, medium: 90, small: 70 },
     neutral: { small: 55, medium: 80 },
-    ai: { medium: 90, large: 135 },
+    'ai-red': { medium: 90, large: 135 },
   },
   nodes: [
     { id: 'n1', type: 'large', x: 220, y: 360, owner: 'player' },
@@ -19,8 +19,8 @@ export const levelFour = {
     { id: 'n5', type: 'small', x: 560, y: 240, owner: 'neutral' },
     { id: 'n6', type: 'medium', x: 600, y: 360, owner: 'neutral' },
     { id: 'n7', type: 'small', x: 560, y: 480, owner: 'neutral' },
-    { id: 'n8', type: 'medium', x: 820, y: 260, owner: 'ai' },
-    { id: 'n9', type: 'medium', x: 820, y: 460, owner: 'ai' },
-    { id: 'n10', type: 'large', x: 960, y: 360, owner: 'ai' },
+    { id: 'n8', type: 'medium', x: 820, y: 260, owner: 'ai-red' },
+    { id: 'n9', type: 'medium', x: 820, y: 460, owner: 'ai-red' },
+    { id: 'n10', type: 'large', x: 960, y: 360, owner: 'ai-red' },
   ],
 };

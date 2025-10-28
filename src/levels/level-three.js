@@ -9,13 +9,13 @@ export const levelThree = {
   initialEnergy: {
     player: { large: 150, medium: 90 },
     neutral: { medium: 75 },
-    ai: { large: 125 },
+    'ai-red': { large: 125 },
   },
   nodes: [
     { id: 'n1', type: 'large', x: 260, y: 360, owner: 'player' },
     { id: 'n2', type: 'medium', x: 380, y: 260, owner: 'player' },
     { id: 'n3', type: 'medium', x: 380, y: 460, owner: 'player' },
     { id: 'n4', type: 'medium', x: 600, y: 420, owner: 'neutral' },
-    { id: 'n5', type: 'large', x: 920, y: 360, owner: 'ai' },
+    { id: 'n5', type: 'large', x: 920, y: 360, owner: 'ai-red' },
   ],
 };

@@ -61,10 +61,11 @@ const createEnergyEntry = (faction, label) => {
   return entryValue;
 };
 
-/** @type {Record<'player' | 'ai' | 'neutral', HTMLSpanElement>} */
+/** @type {Record<'player' | 'ai-red' | 'ai-purple' | 'neutral', HTMLSpanElement>} */
 const energyValues = {
   player: createEnergyEntry('player', 'Player'),
-  ai: createEnergyEntry('ai', 'AI'),
+  'ai-red': createEnergyEntry('ai-red', 'Red AI'),
+  'ai-purple': createEnergyEntry('ai-purple', 'Purple AI'),
   neutral: createEnergyEntry('neutral', 'Neutral'),
 };
 

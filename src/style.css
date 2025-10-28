@@ -120,8 +120,12 @@ canvas {
   color: #2563eb;
 }
 
-.energy-summary__entry--ai .energy-summary__label {
+.energy-summary__entry--ai-red .energy-summary__label {
   color: #dc2626;
+}
+
+.energy-summary__entry--ai-purple .energy-summary__label {
+  color: #7c3aed;
 }
 
 .energy-summary__entry--neutral .energy-summary__label {
@@ -152,8 +156,12 @@ canvas {
   background: #2563eb;
 }
 
-.legend .ai::before {
+.legend .ai-red::before {
   background: #dc2626;
+}
+
+.legend .ai-purple::before {
+  background: #7c3aed;
 }
 
 .legend .neutral::before {

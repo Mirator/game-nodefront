@@ -37,7 +37,8 @@ export class FlowgridGame {
    *   restartButton: HTMLButtonElement;
    *   energyValues: {
    *     player: HTMLElement;
-   *     ai: HTMLElement;
+   *     'ai-red': HTMLElement;
+   *     'ai-purple': HTMLElement;
    *     neutral: HTMLElement;
    *   };
    * }} hudElements
@@ -110,7 +111,10 @@ export class FlowgridGame {
     };
 
     this.hudElements.legend.innerHTML =
-      '<span class="player">Player</span><span class="ai">AI</span><span class="neutral">Neutral</span>';
+      '<span class="player">Player</span>' +
+      '<span class="ai-red">Red AI</span>' +
+      '<span class="ai-purple">Purple AI</span>' +
+      '<span class="neutral">Neutral</span>';
 
     this.applyLevel(level);
     this.resetState();
@@ -194,8 +198,8 @@ export class FlowgridGame {
     createLinkImpl(this, sourceId, targetId);
   }
 
-  queueAiLink(sourceId, targetId, options) {
-    return queueAiLinkImpl(this, sourceId, targetId, options);
+  queueAiLink(faction, sourceId, targetId, options) {
+    return queueAiLinkImpl(this, faction, sourceId, targetId, options);
   }
 
   removeLink(id) {
@@ -210,8 +214,8 @@ export class FlowgridGame {
     captureNodeImpl(this, node, newOwner);
   }
 
-  runAiTurn() {
-    runAiTurnImpl(this);
+  runAiTurn(faction) {
+    runAiTurnImpl(this, faction);
   }
 
   trimAiLinksIfWeak(node) {
@@ -238,7 +242,7 @@ export class FlowgridGame {
     }
 
     /** @type {Record<Faction, number>} */
-    const totals = { player: 0, ai: 0, neutral: 0 };
+    const totals = { player: 0, 'ai-red': 0, 'ai-purple': 0, neutral: 0 };
     for (const node of this.nodes.values()) {
       if (totals[node.owner] !== undefined) {
         totals[node.owner] += node.energy;
@@ -246,7 +250,7 @@ export class FlowgridGame {
     }
 
     /** @type {Array<Faction>} */
-    const factions = ['player', 'ai', 'neutral'];
+    const factions = ['player', 'ai-red', 'ai-purple', 'neutral'];
     for (const faction of factions) {
       const valueElement = energyValues[faction];
       if (valueElement) {
