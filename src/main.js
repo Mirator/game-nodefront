@@ -25,9 +25,52 @@ const pauseIndicator = document.createElement('div');
 pauseIndicator.className = 'pause-indicator';
 container.appendChild(pauseIndicator);
 
+const topRightHud = document.createElement('div');
+topRightHud.className = 'top-right-hud';
+container.appendChild(topRightHud);
+
+const energyDisplay = document.createElement('div');
+energyDisplay.className = 'energy-summary';
+topRightHud.appendChild(energyDisplay);
+
+const energyTitle = document.createElement('div');
+energyTitle.className = 'energy-summary__title';
+energyTitle.textContent = 'Energy';
+energyDisplay.appendChild(energyTitle);
+
+const energyValuesContainer = document.createElement('div');
+energyValuesContainer.className = 'energy-summary__values';
+energyDisplay.appendChild(energyValuesContainer);
+
+const createEnergyEntry = (faction, label) => {
+  const entry = document.createElement('div');
+  entry.className = `energy-summary__entry energy-summary__entry--${faction}`;
+
+  const entryLabel = document.createElement('span');
+  entryLabel.className = 'energy-summary__label';
+  entryLabel.textContent = label;
+  entry.appendChild(entryLabel);
+
+  const entryValue = document.createElement('span');
+  entryValue.className = 'energy-summary__value';
+  entryValue.textContent = '0';
+  entryValue.dataset.faction = faction;
+  entry.appendChild(entryValue);
+
+  energyValuesContainer.appendChild(entry);
+  return entryValue;
+};
+
+/** @type {Record<'player' | 'ai' | 'neutral', HTMLSpanElement>} */
+const energyValues = {
+  player: createEnergyEntry('player', 'Player'),
+  ai: createEnergyEntry('ai', 'AI'),
+  neutral: createEnergyEntry('neutral', 'Neutral'),
+};
+
 const legend = document.createElement('div');
 legend.className = 'legend';
-container.appendChild(legend);
+topRightHud.appendChild(legend);
 
 const controlsBar = document.createElement('div');
 controlsBar.className = 'top-controls';
@@ -207,6 +250,7 @@ const game = new FlowgridGame(
     endScreen,
     endHeadline,
     restartButton,
+    energyValues,
   },
   defaultLevel,
   config,
