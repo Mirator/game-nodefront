@@ -248,18 +248,16 @@ canvas {
   flex-direction: column;
   gap: 20px;
   padding: 32px 36px;
-  width: min(340px, 80vw);
+  width: min(520px, 90vw);
   background: rgba(246, 243, 239, 0.98);
   border-radius: 20px;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
   color: #1f2933;
-  --menu-level-base-size: 96px;
+  --menu-level-base-size: 80px;
   --menu-level-bubble-size: calc(var(--menu-level-base-size) / 2);
-  --menu-level-grid-min: calc(var(--menu-level-bubble-size) + 34px);
+  --menu-level-grid-min: calc(var(--menu-level-bubble-size) + 18px);
   --menu-level-gap: clamp(10px, calc(var(--menu-level-bubble-size) / 3), 18px);
-  --menu-level-button-gap: clamp(6px, calc(var(--menu-level-bubble-size) / 4.8), 10px);
   --menu-level-number: clamp(14px, calc(var(--menu-level-bubble-size) / 3), 24px);
-  --menu-level-caption: clamp(10px, calc(var(--menu-level-bubble-size) / 4.5), 12px);
 }
 
 .menu h2 {
@@ -284,7 +282,7 @@ canvas {
 
 .menu__level-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--menu-level-grid-min), 1fr));
+  grid-template-columns: repeat(4, minmax(var(--menu-level-grid-min), 1fr));
   gap: var(--menu-level-gap);
 }
 
@@ -294,9 +292,8 @@ canvas {
   padding: 0;
   margin: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--menu-level-button-gap);
+  justify-content: center;
   color: inherit;
   font: inherit;
   cursor: pointer;
@@ -323,12 +320,6 @@ canvas {
   transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
-.menu__level-caption {
-  font-size: var(--menu-level-caption);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
 .menu__level-button:not(.menu__level-button--locked):hover .menu__level-bubble,
 .menu__level-button:not(.menu__level-button--locked):focus-visible .menu__level-bubble {
   box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
@@ -344,11 +335,6 @@ canvas {
   background: #2563eb;
   color: #ffffff;
   box-shadow: 0 14px 30px rgba(37, 99, 235, 0.24);
-}
-
-.menu__level-button--selected .menu__level-caption {
-  font-weight: 600;
-  color: #1f2933;
 }
 
 .menu__level-button--locked {

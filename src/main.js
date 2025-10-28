@@ -166,16 +166,13 @@ availableLevels.forEach((level, index) => {
   button.dataset.levelId = level.id;
   button.setAttribute('aria-pressed', 'false');
   button.setAttribute('aria-disabled', 'false');
+  button.setAttribute('aria-label', level.name);
+  button.title = level.name;
 
   const bubble = document.createElement('span');
   bubble.className = 'menu__level-bubble';
   bubble.textContent = String(index + 1).padStart(2, '0');
   button.appendChild(bubble);
-
-  const caption = document.createElement('span');
-  caption.className = 'menu__level-caption';
-  caption.textContent = level.name;
-  button.appendChild(caption);
 
   button.addEventListener('click', () => {
     if (button.classList.contains('menu__level-button--locked')) {
