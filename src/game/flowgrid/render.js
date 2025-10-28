@@ -171,15 +171,22 @@ export function render(game) {
       ctx.restore();
     }
 
+    ctx.save();
+    const shadowAlpha = hover ? 0.18 : 0.12;
+    ctx.shadowColor = hexToRgba('#0f172a', shadowAlpha);
+    ctx.shadowBlur = hover ? 14 : 10;
+    ctx.shadowOffsetY = hover ? 3 : 2;
     ctx.fillStyle = '#f6f3ef';
     ctx.beginPath();
     ctx.arc(node.x, node.y, outerRadius, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
 
     const ringAlpha = hover ? 0.9 : 0.75;
     const flashBoost = flashRatio > 0 ? 0.2 * flashRatio : 0;
     ctx.strokeStyle = hexToRgba(color, Math.min(1, ringAlpha + flashBoost));
     ctx.lineWidth = hover ? hoverRingLineWidth : ringLineWidth;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.arc(node.x, node.y, ringRadius, 0, Math.PI * 2);
     ctx.stroke();
@@ -189,7 +196,24 @@ export function render(game) {
     ctx.arc(node.x, node.y, innerFillRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    const energyBaseAlpha = 0.25 + flashBoost * 0.5;
+    const highlightRadius = Math.max(2, innerFillRadius - Math.max(1, Math.round(baseScale * 2)));
+    const highlight = ctx.createRadialGradient(
+      node.x - innerFillRadius * 0.35,
+      node.y - innerFillRadius * 0.35,
+      Math.max(1, innerFillRadius * 0.05),
+      node.x,
+      node.y,
+      highlightRadius,
+    );
+    highlight.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+    highlight.addColorStop(0.55, 'rgba(255, 255, 255, 0.35)');
+    highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, highlightRadius, 0, Math.PI * 2);
+    ctx.fillStyle = highlight;
+    ctx.fill();
+
+    const energyBaseAlpha = 0.22 + flashBoost * 0.45;
     ctx.strokeStyle = hexToRgba(color, energyBaseAlpha);
     ctx.lineWidth = hover ? hoverEnergyLineWidth : energyLineWidth;
     ctx.beginPath();

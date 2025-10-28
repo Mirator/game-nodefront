@@ -365,13 +365,26 @@ canvas {
 
 .menu__level-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--menu-level-min-width), 1fr));
-  gap: var(--menu-level-gap);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
   max-height: clamp(220px, 55vh, 360px);
   overflow-y: auto;
-  padding-right: 6px;
+  padding-right: 4px;
   align-content: start;
+  justify-items: center;
   scrollbar-gutter: stable;
+}
+
+@media (max-width: 520px) {
+  .menu__level-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .menu__level-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .menu__level-button {
@@ -384,7 +397,7 @@ canvas {
   color: inherit;
   font: inherit;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   touch-action: manipulation;
 }
 
@@ -394,36 +407,28 @@ canvas {
 
 .menu__level-card {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
+  align-items: center;
+  justify-content: center;
+  width: clamp(48px, 50%, 64px);
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.92);
-  color: rgba(30, 41, 59, 0.78);
-  min-height: 76px;
+  border: 1px solid rgba(15, 23, 42, 0.22);
+  background: rgba(255, 255, 255, 0.95);
+  color: rgba(15, 23, 42, 0.78);
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .menu__level-number {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
-  color: rgba(30, 41, 59, 0.55);
-}
-
-.menu__level-name {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.72);
 }
 
 .menu__level-button:not(.menu__level-button--locked):hover .menu__level-card,
 .menu__level-button:not(.menu__level-button--locked):focus-visible .menu__level-card {
-  border-color: rgba(37, 99, 235, 0.45);
+  border-color: rgba(37, 99, 235, 0.6);
   background: #ffffff;
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
   transform: translateY(-1px);
@@ -441,11 +446,7 @@ canvas {
 }
 
 .menu__level-button--selected .menu__level-number {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.menu__level-button--selected .menu__level-name {
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .menu__level-button--locked {
@@ -463,10 +464,6 @@ canvas {
 
 .menu__level-button--locked .menu__level-number {
   color: rgba(100, 116, 139, 0.7);
-}
-
-.menu__level-button--locked .menu__level-name {
-  color: rgba(100, 116, 139, 0.85);
 }
 
 .menu__actions {
