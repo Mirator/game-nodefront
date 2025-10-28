@@ -193,6 +193,7 @@ selectLevel(currentLevelId);
 /** @type {import('./types.js').GameConfig} */
 const config = {
   fixedStep: 1 / 60,
+  maxFrameDelta: 0.25,
   distanceLoss: 0.001,
   efficiencyFloor: 0.35,
   captureSeed: 5,

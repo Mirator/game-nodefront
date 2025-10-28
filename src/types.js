@@ -69,6 +69,7 @@
  * @property {number} [aiTurnInterval]
  * @property {number} [aiInitialDelay]
  * @property {number} [aiNodeAttackDelay]
+ * @property {number} [maxFrameDelta]
  */
 
 export {};
