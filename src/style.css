@@ -143,6 +143,10 @@ canvas {
   color: rgba(30, 41, 59, 0.68);
 }
 
+.energy-summary__entry[hidden] {
+  display: none;
+}
+
 .energy-summary__label {
   font-weight: 500;
 }
