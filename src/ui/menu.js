@@ -99,22 +99,19 @@ export function createMenu(root) {
       button.dataset.levelId = level.id;
       button.setAttribute('aria-pressed', 'false');
       button.setAttribute('aria-disabled', 'false');
-      button.setAttribute('aria-label', `${index + 1}. ${level.name}`);
-      button.title = level.name;
+      button.setAttribute('aria-label', level.name ? `Level ${index + 1}: ${level.name}` : `Level ${index + 1}`);
+      if (level.name) {
+        button.title = level.name;
+      }
 
       const card = document.createElement('span');
       card.className = 'menu__level-card';
 
       const levelNumber = document.createElement('span');
       levelNumber.className = 'menu__level-number';
-      levelNumber.textContent = `Level ${String(index + 1).padStart(2, '0')}`;
-
-      const levelName = document.createElement('span');
-      levelName.className = 'menu__level-name';
-      levelName.textContent = level.name;
+      levelNumber.textContent = String(index + 1).padStart(2, '0');
 
       card.appendChild(levelNumber);
-      card.appendChild(levelName);
       button.appendChild(card);
 
       button.addEventListener('click', () => {
