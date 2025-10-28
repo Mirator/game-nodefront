@@ -1,12 +1,7 @@
 /** @typedef {import('../FlowgridGame.js').FlowgridGame} FlowgridGame */
 
 import { hexToRgba } from '../color.js';
-import {
-  FACTION_COLORS,
-  FRIENDLY_OUTLINE,
-  LINK_BUILD_DASH_PATTERN,
-  LINK_DASH_PATTERN,
-} from '../constants.js';
+import { FACTION_COLORS, LINK_BUILD_DASH_PATTERN, LINK_DASH_PATTERN } from '../constants.js';
 import { clamp } from '../math.js';
 
 /**
@@ -110,56 +105,49 @@ export function render(game) {
     const color = FACTION_COLORS[node.owner];
     ctx.save();
 
-    ctx.shadowColor = hexToRgba(color, 0.45);
-    ctx.shadowBlur = node.radius * 1.6;
-    ctx.fillStyle = '#f1ece6';
+    const hover = game.pointer.hoverNode?.id === node.id;
+    const outerRadius = node.radius + 4;
+    const ringRadius = node.radius + 1;
+    const energyRadius = Math.max(node.radius - 5, node.radius * 0.65);
+    const energyRatio = clamp(node.energy / node.capacity, 0, 1);
+
+    ctx.fillStyle = '#f6f3ef';
     ctx.beginPath();
-    ctx.arc(node.x, node.y, node.radius + 4, 0, Math.PI * 2);
+    ctx.arc(node.x, node.y, outerRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.shadowColor = 'rgba(0,0,0,0)';
-    ctx.shadowBlur = 0;
-
-    ctx.strokeStyle = node.owner === 'player' ? FRIENDLY_OUTLINE : '#1f2933';
-    ctx.lineWidth = game.pointer.hoverNode?.id === node.id ? 3 : 1.5;
+    ctx.strokeStyle = hexToRgba(color, hover ? 0.9 : 0.75);
+    ctx.lineWidth = hover ? 5 : 4;
     ctx.beginPath();
-    ctx.arc(node.x, node.y, node.radius + 1, 0, Math.PI * 2);
+    ctx.arc(node.x, node.y, ringRadius, 0, Math.PI * 2);
     ctx.stroke();
 
-    const bodyGradient = ctx.createRadialGradient(
+    ctx.fillStyle = '#f6f3ef';
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, node.radius - 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = hexToRgba(color, 0.25);
+    ctx.lineWidth = hover ? 6 : 5;
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, energyRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = hover ? 6 : 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(
       node.x,
       node.y,
-      Math.max(2, node.radius * 0.2),
-      node.x,
-      node.y,
-      node.radius,
+      energyRadius,
+      -Math.PI / 2,
+      -Math.PI / 2 + energyRatio * Math.PI * 2,
     );
-    bodyGradient.addColorStop(0, 'rgba(255,255,255,0.85)');
-    bodyGradient.addColorStop(0.7, hexToRgba(color, 0.95));
-    bodyGradient.addColorStop(1, color);
-    ctx.fillStyle = bodyGradient;
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.stroke();
 
-    const energyRatio = clamp(node.energy / node.capacity, 0, 1);
-    const innerRadius = node.radius - 4;
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, innerRadius, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.85;
-    ctx.beginPath();
-    ctx.moveTo(node.x, node.y);
-    ctx.arc(node.x, node.y, innerRadius, -Math.PI / 2, -Math.PI / 2 + energyRatio * Math.PI * 2);
-    ctx.lineTo(node.x, node.y);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    ctx.fillStyle = '#1f2933';
-    ctx.font = 'bold 12px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+    ctx.font = '600 12px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(Math.round(node.energy)), node.x, node.y);
