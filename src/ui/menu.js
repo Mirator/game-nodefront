@@ -118,11 +118,22 @@ export function createMenu(root) {
       card.appendChild(levelNumber);
       button.appendChild(card);
 
-      button.addEventListener('click', () => {
+      const handleLevelSelection = () => {
         if (isLocked(button)) {
           return;
         }
         selectLevel(level.id);
+      };
+
+      button.addEventListener('pointerdown', (event) => {
+        if (event.button !== undefined && event.button !== 0) {
+          return;
+        }
+        handleLevelSelection();
+      });
+
+      button.addEventListener('click', () => {
+        handleLevelSelection();
       });
 
       levelButtons.set(level.id, button);
