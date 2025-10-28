@@ -21,8 +21,16 @@ import { captureNode as captureNodeImpl, checkVictory as checkVictoryImpl, setWi
 import { render as renderImpl } from './flowgrid/render.js';
 import { createPointerState } from './pointer.js';
 import { createSeededRng } from './math.js';
+import { FACTION_LABELS } from './constants.js';
 
 const DEFAULT_MAX_FRAME_DELTA = 0.25;
+
+const ENERGY_CHART_COLORS = {
+  player: '#2563eb',
+  'ai-red': '#dc2626',
+  'ai-purple': '#7c3aed',
+  neutral: '#4b5563',
+};
 
 export class FlowgridGame {
   /**
@@ -41,6 +49,8 @@ export class FlowgridGame {
    *     'ai-purple': HTMLElement;
    *     neutral: HTMLElement;
    *   };
+   *   energyChart: HTMLDivElement;
+   *   energyTotal: HTMLDivElement;
    * }} hudElements
    * @param {LevelDefinition} level
    * @param {GameConfig} config
@@ -95,6 +105,9 @@ export class FlowgridGame {
 
     initializeAiState(this);
 
+    /** @type {string} */
+    this.legendKey = '';
+
     this.loop = (timestamp) => {
       const rawDelta = (timestamp - this.lastTimestamp) / 1000;
       const delta = Math.min(Math.max(rawDelta, 0), this.maxFrameDelta);
@@ -112,12 +125,6 @@ export class FlowgridGame {
       this.render();
       this.animationFrame = requestAnimationFrame(this.loop);
     };
-
-    this.hudElements.legend.innerHTML =
-      '<span class="player">Player</span>' +
-      '<span class="ai-red">Red AI</span>' +
-      '<span class="ai-purple">Purple AI</span>' +
-      '<span class="neutral">Neutral</span>';
 
     this.applyLevel(level);
     this.resetState();
@@ -249,25 +256,80 @@ export class FlowgridGame {
   }
 
   updateEnergySummary() {
-    const energyValues = this.hudElements.energyValues;
+    const { energyValues, energyChart, energyTotal, legend } = this.hudElements;
     if (!energyValues) {
       return;
     }
 
     /** @type {Record<Faction, number>} */
     const totals = { player: 0, 'ai-red': 0, 'ai-purple': 0, neutral: 0 };
+    /** @type {Record<Faction, boolean>} */
+    const hasNodes = { player: false, 'ai-red': false, 'ai-purple': false, neutral: false };
     for (const node of this.nodes.values()) {
       if (totals[node.owner] !== undefined) {
         totals[node.owner] += node.energy;
+        hasNodes[node.owner] = true;
       }
     }
 
     /** @type {Array<Faction>} */
     const factions = ['player', 'ai-red', 'ai-purple', 'neutral'];
+    /** @type {Array<Faction>} */
+    const visibleFactions = [];
     for (const faction of factions) {
+      const shouldShow = faction === 'player' || hasNodes[faction];
       const valueElement = energyValues[faction];
       if (valueElement) {
         valueElement.textContent = String(Math.round(totals[faction] ?? 0));
+        const entryElement = valueElement.parentElement;
+        if (entryElement) {
+          if (entryElement.hidden === shouldShow) {
+            entryElement.hidden = !shouldShow;
+          }
+        }
+      }
+      if (shouldShow) {
+        visibleFactions.push(faction);
+      }
+    }
+
+    const totalEnergy = factions.reduce((sum, faction) => sum + (totals[faction] ?? 0), 0);
+    if (energyTotal) {
+      energyTotal.textContent = String(Math.round(totalEnergy));
+    }
+
+    if (energyChart) {
+      if (totalEnergy > 0) {
+        let startAngle = 0;
+        const segments = [];
+        for (const faction of factions) {
+          const value = totals[faction] ?? 0;
+          if (value <= 0) {
+            continue;
+          }
+
+          const angle = (value / totalEnergy) * 360;
+          const endAngle = startAngle + angle;
+          const color = ENERGY_CHART_COLORS[faction] ?? '#e2e8f0';
+          segments.push(`${color} ${startAngle}deg ${endAngle}deg`);
+          startAngle = endAngle;
+        }
+        energyChart.style.background = `conic-gradient(${segments.join(', ')})`;
+      } else {
+        energyChart.style.background = 'conic-gradient(#e2e8f0 0deg 360deg)';
+      }
+    }
+
+    if (legend) {
+      const legendKey = visibleFactions.join('|');
+      if (legendKey !== this.legendKey) {
+        this.legendKey = legendKey;
+        legend.innerHTML = visibleFactions
+          .map((faction) => {
+            const label = FACTION_LABELS[faction] ?? faction;
+            return `<span class="${faction}">${label}</span>`;
+          })
+          .join('');
       }
     }
   }

@@ -39,9 +39,22 @@ export function createHud(root) {
   energyTitle.textContent = 'Energy';
   energyDisplay.appendChild(energyTitle);
 
+  const energyContent = document.createElement('div');
+  energyContent.className = 'energy-summary__content';
+  energyDisplay.appendChild(energyContent);
+
+  const energyChart = document.createElement('div');
+  energyChart.className = 'energy-summary__chart';
+  energyContent.appendChild(energyChart);
+
+  const energyTotal = document.createElement('div');
+  energyTotal.className = 'energy-summary__total';
+  energyTotal.textContent = '0';
+  energyChart.appendChild(energyTotal);
+
   const energyValuesContainer = document.createElement('div');
   energyValuesContainer.className = 'energy-summary__values';
-  energyDisplay.appendChild(energyValuesContainer);
+  energyContent.appendChild(energyValuesContainer);
 
   /**
    * @param {Faction | 'neutral'} faction
@@ -151,6 +164,8 @@ export function createHud(root) {
       endHeadline,
       restartButton,
       energyValues,
+      energyChart,
+      energyTotal,
     },
     newGameButton,
     nextLevelButton,
