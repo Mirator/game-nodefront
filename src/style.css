@@ -54,10 +54,76 @@ canvas {
   pointer-events: none;
 }
 
-.legend {
+.top-right-hud {
   position: absolute;
   top: 16px;
   right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.energy-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(246, 243, 239, 0.92);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  pointer-events: none;
+}
+
+.energy-summary__title {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.energy-summary__values {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.energy-summary__entry {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.energy-summary__label {
+  font-weight: 600;
+}
+
+.energy-summary__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.energy-summary__entry--player .energy-summary__label {
+  color: #2563eb;
+}
+
+.energy-summary__entry--ai .energy-summary__label {
+  color: #dc2626;
+}
+
+.energy-summary__entry--neutral .energy-summary__label {
+  color: #4b5563;
+}
+
+.legend {
   display: flex;
   gap: 12px;
   font-size: 12px;

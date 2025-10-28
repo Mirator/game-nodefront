@@ -38,6 +38,11 @@ export class FlowgridGame {
    *   endScreen: HTMLDivElement;
    *   endHeadline: HTMLHeadingElement;
    *   restartButton: HTMLButtonElement;
+   *   energyValues: {
+   *     player: HTMLElement;
+   *     ai: HTMLElement;
+   *     neutral: HTMLElement;
+   *   };
    * }} hudElements
    * @param {LevelDefinition} level
    * @param {GameConfig} config
@@ -136,12 +141,14 @@ export class FlowgridGame {
 
   loadLevel(level) {
     loadLevelImpl(this, level);
+    this.updateEnergySummary();
   }
 
   resetState() {
     resetStateImpl(this);
     this.accumulator = 0;
     this.lastTimestamp = 0;
+    this.updateEnergySummary();
   }
 
   clearPromptTimeout() {
@@ -230,6 +237,31 @@ export class FlowgridGame {
 
   render() {
     renderImpl(this);
+    this.updateEnergySummary();
+  }
+
+  updateEnergySummary() {
+    const energyValues = this.hudElements.energyValues;
+    if (!energyValues) {
+      return;
+    }
+
+    /** @type {Record<Faction, number>} */
+    const totals = { player: 0, ai: 0, neutral: 0 };
+    for (const node of this.nodes.values()) {
+      if (totals[node.owner] !== undefined) {
+        totals[node.owner] += node.energy;
+      }
+    }
+
+    /** @type {Array<Faction>} */
+    const factions = ['player', 'ai', 'neutral'];
+    for (const faction of factions) {
+      const valueElement = energyValues[faction];
+      if (valueElement) {
+        valueElement.textContent = String(Math.round(totals[faction] ?? 0));
+      }
+    }
   }
 
   /**
