@@ -108,70 +108,8 @@ export function createLink(game, sourceId, targetId) {
     existing.share = equalShare;
   }
   link.share = equalShare;
-  game.lastCreatedLink = link;
-
   if (source.owner === 'ai' && game.aiNodeAttackDelay > 0) {
     game.aiNodeAttackCooldown.set(sourceId, game.aiNodeAttackDelay);
-  }
-}
-
-/**
- * @param {FlowgridGame} game
- * @param {LinkState} link
- * @param {number} fraction
- */
-export function applySharePreset(game, link, fraction) {
-  const sourceLinks = game.outgoingByNode.get(link.sourceId);
-  if (!sourceLinks) return;
-  if (!sourceLinks.includes(link)) return;
-
-  const desired = clamp(fraction, 0.05, 1);
-  const others = sourceLinks.filter((l) => l !== link);
-
-  if (others.length === 0) {
-    link.share = 1;
-    return;
-  }
-
-  const remainingBudget = Math.max(0, 1 - desired);
-  const previousShares = others.map((other) => other.share);
-  const previousTotal = previousShares.reduce((acc, value) => acc + value, 0);
-
-  link.share = desired;
-
-  if (remainingBudget === 0) {
-    for (const other of others) {
-      other.share = 0;
-    }
-    return;
-  }
-
-  let assigned = 0;
-
-  if (previousTotal > 0) {
-    const scale = remainingBudget / previousTotal;
-    for (let i = 0; i < others.length; i += 1) {
-      const baseShare = previousShares[i] * scale;
-      const isLast = i === others.length - 1;
-      const newShare = isLast ? remainingBudget - assigned : baseShare;
-      others[i].share = newShare;
-      assigned += newShare;
-    }
-  } else {
-    const evenShare = remainingBudget / others.length;
-    for (let i = 0; i < others.length; i += 1) {
-      const isLast = i === others.length - 1;
-      const newShare = isLast ? remainingBudget - assigned : evenShare;
-      others[i].share = newShare;
-      assigned += newShare;
-    }
-  }
-
-  const total = others.reduce((acc, other) => acc + other.share, link.share);
-  const delta = 1 - total;
-  if (Math.abs(delta) > Number.EPSILON) {
-    const lastOther = others[others.length - 1];
-    lastOther.share = clamp(lastOther.share + delta, 0, remainingBudget);
   }
 }
 
@@ -206,7 +144,4 @@ export function removeLink(game, id) {
   link.dashOffset = 0;
   link.smoothedRate = 0;
   game.links.delete(id);
-  if (game.lastCreatedLink?.id === id) {
-    game.lastCreatedLink = null;
-  }
 }

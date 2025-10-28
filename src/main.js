@@ -241,11 +241,6 @@ const config = {
   linkMaxRate: 20,
   surplusThreshold: 20,
   regenRateMultiplier: 0.6,
-  sharePresets: {
-    '1': 0.25,
-    '2': 0.5,
-    '3': 1,
-  },
   aiInitialDelay: 2.5,
   aiNodeAttackDelay: 1,
 };

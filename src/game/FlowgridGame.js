@@ -1,9 +1,6 @@
 /** @typedef {import('../types.js').Faction} Faction */
 /** @typedef {import('../types.js').GameConfig} GameConfig */
 /** @typedef {import('../types.js').LevelDefinition} LevelDefinition */
-/** @typedef {import('../types.js').LinkState} LinkState */
-/** @typedef {import('../types.js').NodeState} NodeState */
-
 import {
   initializeAiState,
   runAiTurn as runAiTurnImpl,
@@ -18,7 +15,7 @@ import { registerInputHandlers } from './flowgrid/input.js';
 import { applyLevel as applyLevelImpl, loadLevel as loadLevelImpl, resetState as resetStateImpl } from './flowgrid/state.js';
 import { clearPromptTimeout as clearPromptTimeoutImpl, setPrompt as setPromptImpl, applyPrompt as applyPromptImpl, showTemporaryPrompt as showTemporaryPromptImpl } from './flowgrid/prompt.js';
 import { start as startImpl, isRunning as isRunningImpl, isPaused as isPausedImpl, pause as pauseImpl, resume as resumeImpl, togglePause as togglePauseImpl, restart as restartImpl } from './flowgrid/lifecycle.js';
-import { hitTestNode as hitTestNodeImpl, deleteLinkAtPointer as deleteLinkAtPointerImpl, createLink as createLinkImpl, applySharePreset as applySharePresetImpl, removeLink as removeLinkImpl } from './flowgrid/links.js';
+import { hitTestNode as hitTestNodeImpl, deleteLinkAtPointer as deleteLinkAtPointerImpl, createLink as createLinkImpl, removeLink as removeLinkImpl } from './flowgrid/links.js';
 import { update as updateImpl } from './flowgrid/update.js';
 import { captureNode as captureNodeImpl, checkVictory as checkVictoryImpl, setWinner as setWinnerImpl } from './flowgrid/victory.js';
 import { render as renderImpl } from './flowgrid/render.js';
@@ -74,8 +71,6 @@ export class FlowgridGame {
     this.running = false;
     /** @type {Faction | null} */
     this.winner = null;
-    /** @type {LinkState | null} */
-    this.lastCreatedLink = null;
     this.tutorialShown = false;
     this.promptLastMessage = '';
     this.promptLastVariant = 'normal';
@@ -201,10 +196,6 @@ export class FlowgridGame {
 
   queueAiLink(sourceId, targetId, options) {
     return queueAiLinkImpl(this, sourceId, targetId, options);
-  }
-
-  applySharePreset(link, fraction) {
-    applySharePresetImpl(this, link, fraction);
   }
 
   removeLink(id) {
