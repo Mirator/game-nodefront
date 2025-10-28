@@ -13,7 +13,8 @@ import { clamp, distance, distanceToSegment } from '../math.js';
 export function hitTestNode(game, x, y) {
   for (const node of Array.from(game.nodes.values()).reverse()) {
     const dist = distance(x, y, node.x, node.y);
-    if (dist <= node.radius + 6) {
+    const hitPadding = Math.max(6, Math.round(node.radius * 0.3));
+    if (dist <= node.radius + hitPadding) {
       return node;
     }
   }

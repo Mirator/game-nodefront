@@ -106,9 +106,20 @@ export function render(game) {
     ctx.save();
 
     const hover = game.pointer.hoverNode?.id === node.id;
-    const outerRadius = node.radius + 4;
-    const ringRadius = node.radius + 1;
-    const energyRadius = Math.max(node.radius - 5, node.radius * 0.65);
+    const baseScale = node.radius / 23;
+    const outlinePadding = Math.max(4, Math.round(5 * baseScale));
+    const ringOffset = Math.max(1, Math.round(2 * baseScale));
+    const innerInset = Math.max(3, Math.round(4 * baseScale));
+    const energyInset = Math.max(innerInset + 2, Math.round(node.radius * 0.45));
+    const ringLineWidth = Math.max(4, Math.round(node.radius * 0.22));
+    const energyLineWidth = Math.max(ringLineWidth + 1, Math.round(node.radius * 0.28));
+    const hoverRingLineWidth = ringLineWidth + 1;
+    const hoverEnergyLineWidth = energyLineWidth + 1;
+
+    const outerRadius = node.radius + outlinePadding;
+    const ringRadius = node.radius + ringOffset;
+    const innerFillRadius = Math.max(2, node.radius - innerInset);
+    const energyRadius = Math.max(node.radius - energyInset, node.radius * 0.58);
     const energyRatio = clamp(node.energy / node.capacity, 0, 1);
 
     ctx.fillStyle = '#f6f3ef';
@@ -117,24 +128,24 @@ export function render(game) {
     ctx.fill();
 
     ctx.strokeStyle = hexToRgba(color, hover ? 0.9 : 0.75);
-    ctx.lineWidth = hover ? 5 : 4;
+    ctx.lineWidth = hover ? hoverRingLineWidth : ringLineWidth;
     ctx.beginPath();
     ctx.arc(node.x, node.y, ringRadius, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.fillStyle = '#f6f3ef';
     ctx.beginPath();
-    ctx.arc(node.x, node.y, node.radius - 2, 0, Math.PI * 2);
+    ctx.arc(node.x, node.y, innerFillRadius, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.strokeStyle = hexToRgba(color, 0.25);
-    ctx.lineWidth = hover ? 6 : 5;
+    ctx.lineWidth = hover ? hoverEnergyLineWidth : energyLineWidth;
     ctx.beginPath();
     ctx.arc(node.x, node.y, energyRadius, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.strokeStyle = color;
-    ctx.lineWidth = hover ? 6 : 5;
+    ctx.lineWidth = hover ? hoverEnergyLineWidth : energyLineWidth;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.arc(
@@ -146,10 +157,16 @@ export function render(game) {
     );
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
-    ctx.font = '600 12px Inter, sans-serif';
+    const fontSize = Math.round(clamp(node.radius * 0.9, 13, 28));
+    const strokeWidth = Math.max(2, Math.round(fontSize * 0.18));
+    ctx.font = `700 ${fontSize}px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = strokeWidth;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.strokeText(String(Math.round(node.energy)), node.x, node.y);
+    ctx.fillStyle = '#0f172a';
     ctx.fillText(String(Math.round(node.energy)), node.x, node.y);
 
     ctx.restore();
