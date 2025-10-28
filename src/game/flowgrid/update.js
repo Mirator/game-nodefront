@@ -17,6 +17,15 @@ import { processAiActionQueue } from './ai.js';
 export function update(game, dt) {
   game.elapsedTime += dt;
 
+  if (game.pointer.shakeTimer > 0) {
+    game.pointer.shakeTimer = Math.max(0, game.pointer.shakeTimer - dt);
+    if (game.pointer.shakeTimer === 0) {
+      game.pointer.shakeDuration = 0;
+      game.pointer.shakeMagnitude = 0;
+      game.pointer.shakeSourceId = null;
+    }
+  }
+
   if (game.aiNodeAttackCooldown.size > 0) {
     for (const [nodeId, remaining] of [...game.aiNodeAttackCooldown.entries()]) {
       const updated = remaining - dt;
@@ -32,6 +41,12 @@ export function update(game, dt) {
 
   const regenMultiplier = game.config.regenRateMultiplier ?? 1;
   for (const node of game.nodes.values()) {
+    if (node.flashTimer > 0) {
+      node.flashTimer = Math.max(0, node.flashTimer - dt);
+      if (node.flashTimer === 0) {
+        node.flashDuration = 0;
+      }
+    }
     node.energy = Math.min(node.capacity, node.energy + node.regen * dt * regenMultiplier);
   }
 

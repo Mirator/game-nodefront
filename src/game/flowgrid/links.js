@@ -4,6 +4,43 @@
 
 import { clamp, distance, distanceToSegment } from '../math.js';
 
+const LINK_FAILURE_MESSAGES = {
+  duplicate: 'Route already exists.',
+  self: "Can't route to the same node.",
+  maxRoutes: 'Node is at max routes.',
+};
+
+const NODE_FLASH_DURATION = 0.6;
+const POINTER_SHAKE_DURATION = 0.35;
+const POINTER_SHAKE_MAGNITUDE = 6;
+const FAILURE_PROMPT_DURATION = 1800;
+
+/**
+ * @param {FlowgridGame} game
+ * @param {NodeState | null | undefined} source
+ * @param {'duplicate' | 'self' | 'maxRoutes'} reason
+ */
+function signalLinkFailure(game, source, reason) {
+  if (!source || source.owner !== 'player') return;
+
+  source.flashDuration = NODE_FLASH_DURATION;
+  source.flashTimer = NODE_FLASH_DURATION;
+
+  if (game.pointer?.dragSource && game.pointer.dragSource.id === source.id) {
+    game.pointer.shakeDuration = POINTER_SHAKE_DURATION;
+    game.pointer.shakeTimer = POINTER_SHAKE_DURATION;
+    game.pointer.shakeMagnitude = POINTER_SHAKE_MAGNITUDE;
+    game.pointer.shakeSourceId = source.id;
+    game.pointer.shakeTargetX = game.pointer.x;
+    game.pointer.shakeTargetY = game.pointer.y;
+  }
+
+  const message = LINK_FAILURE_MESSAGES[reason];
+  if (message) {
+    game.showTemporaryPrompt(message, 'warning', FAILURE_PROMPT_DURATION);
+  }
+}
+
 /**
  * @param {FlowgridGame} game
  * @param {number} x
@@ -69,14 +106,21 @@ export function createLink(game, sourceId, targetId) {
 
   if (source.owner === 'player' && game.paused) return;
 
-  if (sourceId === targetId) return;
-  if (game.links.has(`${sourceId}->${targetId}`)) return;
+  if (sourceId === targetId) {
+    signalLinkFailure(game, source, 'self');
+    return;
+  }
+  if (game.links.has(`${sourceId}->${targetId}`)) {
+    signalLinkFailure(game, source, 'duplicate');
+    return;
+  }
 
   const length = distance(source.x, source.y, target.x, target.y);
 
   const outgoing = game.outgoingByNode.get(sourceId);
   if (!outgoing) return;
   if (outgoing.length >= source.outgoingLimit) {
+    signalLinkFailure(game, source, 'maxRoutes');
     return;
   }
 

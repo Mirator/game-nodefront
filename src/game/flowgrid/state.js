@@ -116,6 +116,8 @@ export function resetState(game) {
       energy,
       outgoingLimit: typeConfig.outgoingLimit,
       safetyReserve: game.config.safetyReserve,
+      flashTimer: 0,
+      flashDuration: 0,
     };
     game.nodes.set(node.id, node);
     if (node.owner === 'ai' && game.aiNodeAttackDelay > 0) {
