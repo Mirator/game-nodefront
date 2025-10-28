@@ -7,6 +7,33 @@ import { createSeededRng, normalizeSeed } from '../math.js';
 import { DEFAULT_NODE_TYPE, NODE_TYPES } from '../nodeTypes.js';
 
 /**
+ * @param {LevelDefinition} level
+ * @param {import('../../types.js').NodeDefinition} definition
+ * @param {{capacity: number}} typeConfig
+ * @param {import('../../types.js').NodeTypeId} type
+ */
+function resolveInitialEnergy(level, definition, typeConfig, type) {
+  const energyConfig = level.initialEnergy;
+  const candidates = [
+    energyConfig?.overrides?.[definition.id],
+    definition.energy,
+    energyConfig?.[definition.owner]?.[type],
+    energyConfig?.[definition.owner]?.default,
+    energyConfig?.defaults?.[type],
+    energyConfig?.default,
+    typeConfig.capacity,
+  ];
+
+  for (const value of candidates) {
+    if (Number.isFinite(value)) {
+      return Math.min(value, typeConfig.capacity);
+    }
+  }
+
+  return typeConfig.capacity;
+}
+
+/**
  * @param {FlowgridGame} game
  * @param {LevelDefinition} level
  */
@@ -78,10 +105,7 @@ export function resetState(game) {
       throw new Error(`Unknown node type: ${type}`);
     }
 
-    const energy = Math.min(
-      definition.energy ?? typeConfig.capacity,
-      typeConfig.capacity,
-    );
+    const energy = resolveInitialEnergy(game.initialLevel, definition, typeConfig, type);
 
     /** @type {NodeState} */
     const node = {

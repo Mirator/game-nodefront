@@ -6,11 +6,16 @@ export const levelThree = {
   height: 720,
   seed: 3141,
   aiStrategyId: 'slow-simple',
+  initialEnergy: {
+    player: { large: 150, medium: 90 },
+    neutral: { medium: 75 },
+    ai: { large: 125 },
+  },
   nodes: [
-    { id: 'n1', type: 'large', x: 260, y: 360, owner: 'player', energy: 150 },
-    { id: 'n2', type: 'medium', x: 380, y: 260, owner: 'player', energy: 90 },
-    { id: 'n3', type: 'medium', x: 380, y: 460, owner: 'player', energy: 90 },
-    { id: 'n4', type: 'medium', x: 600, y: 420, owner: 'neutral', energy: 75 },
-    { id: 'n5', type: 'large', x: 920, y: 360, owner: 'ai', energy: 125 },
+    { id: 'n1', type: 'large', x: 260, y: 360, owner: 'player' },
+    { id: 'n2', type: 'medium', x: 380, y: 260, owner: 'player' },
+    { id: 'n3', type: 'medium', x: 380, y: 460, owner: 'player' },
+    { id: 'n4', type: 'medium', x: 600, y: 420, owner: 'neutral' },
+    { id: 'n5', type: 'large', x: 920, y: 360, owner: 'ai' },
   ],
 };
