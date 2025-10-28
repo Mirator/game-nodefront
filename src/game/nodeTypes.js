@@ -1,20 +1,22 @@
+const increaseRadiusByQuarter = (radius) => Math.round(radius + radius / 4);
+
 export const NODE_TYPES = {
   small: {
     capacity: 80,
     regen: 4,
-    radius: 12,
+    radius: increaseRadiusByQuarter(12),
     outgoingLimit: 1,
   },
   medium: {
     capacity: 110,
     regen: 6,
-    radius: 18,
+    radius: increaseRadiusByQuarter(18),
     outgoingLimit: 2,
   },
   large: {
     capacity: 150,
     regen: 8,
-    radius: 26,
+    radius: increaseRadiusByQuarter(26),
     outgoingLimit: 3,
   },
 };

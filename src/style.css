@@ -304,11 +304,8 @@ canvas {
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
   border: 1px solid rgba(148, 163, 184, 0.25);
   color: rgba(15, 23, 42, 0.82);
-  --menu-level-base-size: 80px;
-  --menu-level-bubble-size: calc(var(--menu-level-base-size) / 2);
-  --menu-level-grid-min: calc(var(--menu-level-bubble-size) + 18px);
-  --menu-level-gap: clamp(10px, calc(var(--menu-level-bubble-size) / 3), 18px);
-  --menu-level-number: clamp(14px, calc(var(--menu-level-bubble-size) / 3), 24px);
+  --menu-level-min-width: clamp(140px, 22vw, 180px);
+  --menu-level-gap: clamp(12px, 3vw, 20px);
 }
 
 .menu h2 {
@@ -335,7 +332,7 @@ canvas {
 
 .menu__level-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(var(--menu-level-grid-min), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(var(--menu-level-min-width), 1fr));
   gap: var(--menu-level-gap);
 }
 
@@ -344,65 +341,94 @@ canvas {
   background: none;
   padding: 0;
   margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  width: 100%;
   color: inherit;
   font: inherit;
   cursor: pointer;
-  text-align: center;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  text-align: left;
+  touch-action: manipulation;
 }
 
 .menu__level-button:focus-visible {
   outline: none;
 }
 
-.menu__level-bubble {
-  width: var(--menu-level-bubble-size);
-  height: var(--menu-level-bubble-size);
-  border-radius: 50%;
-  background: rgba(37, 99, 235, 0.08);
-  color: #2563eb;
-  display: grid;
-  place-items: center;
-  font-size: var(--menu-level-number);
+.menu__level-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(30, 41, 59, 0.78);
+  min-height: 92px;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.menu__level-number {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  border: 2px solid rgba(37, 99, 235, 0.4);
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  font-variant-numeric: tabular-nums;
+  color: rgba(30, 41, 59, 0.55);
 }
 
-.menu__level-button:not(.menu__level-button--locked):hover .menu__level-bubble,
-.menu__level-button:not(.menu__level-button--locked):focus-visible .menu__level-bubble {
-  background: rgba(37, 99, 235, 0.16);
-  border-color: rgba(37, 99, 235, 0.6);
-  transform: scale(1.02);
+.menu__level-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
 }
 
-.menu__level-button:not(.menu__level-button--locked):active .menu__level-bubble {
-  transform: scale(0.98);
+.menu__level-button:not(.menu__level-button--locked):hover .menu__level-card,
+.menu__level-button:not(.menu__level-button--locked):focus-visible .menu__level-card {
+  border-color: rgba(37, 99, 235, 0.45);
+  background: #ffffff;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
 }
 
-.menu__level-button--selected .menu__level-bubble {
+.menu__level-button:focus-visible .menu__level-card {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22), 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+.menu__level-button--selected .menu__level-card {
   background: #2563eb;
+  border-color: #1d4ed8;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
   color: #ffffff;
-  border-color: #2563eb;
+}
+
+.menu__level-button--selected .menu__level-number {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.menu__level-button--selected .menu__level-name {
+  color: #ffffff;
 }
 
 .menu__level-button--locked {
   cursor: not-allowed;
 }
 
-.menu__level-button--locked .menu__level-bubble {
-  background: rgba(148, 163, 184, 0.3);
-  color: rgba(71, 85, 105, 0.7);
-  border: 2px dashed rgba(71, 85, 105, 0.4);
+.menu__level-button--locked .menu__level-card {
+  color: rgba(71, 85, 105, 0.78);
+  border-style: dashed;
+  border-color: rgba(148, 163, 184, 0.55);
+  background: rgba(226, 232, 240, 0.6);
   box-shadow: none;
+  transform: none;
 }
 
-.menu__level-button--locked .menu__level-caption {
-  color: rgba(71, 85, 105, 0.7);
+.menu__level-button--locked .menu__level-number {
+  color: rgba(100, 116, 139, 0.7);
+}
+
+.menu__level-button--locked .menu__level-name {
+  color: rgba(100, 116, 139, 0.85);
 }
 
 .menu__actions {
