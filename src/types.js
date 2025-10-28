@@ -85,7 +85,6 @@
  * @property {number} linkMaxRate
  * @property {number} surplusThreshold
  * @property {number} regenRateMultiplier
- * @property {Record<string, number>} sharePresets
  * @property {number} [aiTurnInterval]
  * @property {number} [aiInitialDelay]
  * @property {number} [aiNodeAttackDelay]

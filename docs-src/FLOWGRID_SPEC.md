@@ -66,7 +66,7 @@
 - **Link System**: Enforces per‑node link limits, ensures shares across a source sum to at most 100%, prevents duplicate/illegal links, and clamps distances.  
 - **AI System**: For the MVP, a simple, deterministic policy: when a node has surplus, attempt short, fast attacks on the nearest weak neutral/enemy within range; prefer targets that shorten the front and avoid overextension.
 - **Victory System**: Checks global ownership; on player control of all nodes → “Win”; on AI control of all nodes → “Loss”.  
-- **Input System**: Pointer hover/select, drag to create link, right‑click to delete link, hotkeys (pause, restart, share presets).  
+- **Input System**: Pointer hover/select, drag to create link, right‑click to delete link, hotkeys (pause, restart).
 - **Render System**: Draws background, links (thickness indicating rate), nodes (fill indicating energy), selection/hover effects, HUD and end screens.
 
 ### 4.3 Deterministic Timing
@@ -118,7 +118,6 @@
 - **Keyboard**  
   - **Space**: Pause / Resume.  
   - **R**: Restart current level.  
-  - **1 / 2 / 3**: Set link share presets to 25% / 50% / 100% of source’s available outflow for the last created link.  
   - **Esc**: Deselect.
 
 - **HUD**  

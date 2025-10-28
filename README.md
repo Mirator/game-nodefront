@@ -17,7 +17,6 @@ This launches Vite’s development server. Open the printed URL in your browser 
 - **Delete links:** Right-click near the midpoint of a player-owned link.
 - **Pause/Resume:** Press <kbd>Space</kbd>.
 - **Restart:** Press <kbd>R</kbd> or use the end-screen button.
-- **Adjust share presets:** After creating a link, press <kbd>1</kbd>, <kbd>2</kbd>, or <kbd>3</kbd> to set the share to 25%, 50%, or 100% of the source’s outflow.
 
 Keep links short to maximize efficiency. Captured nodes reseed with low energy, so defend them before expanding further.
 

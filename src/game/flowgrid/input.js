@@ -67,12 +67,6 @@ export function registerInputHandlers(game) {
       return;
     }
 
-    if (game.lastCreatedLink) {
-      const preset = game.config.sharePresets[event.key];
-      if (typeof preset === 'number') {
-        game.applySharePreset(game.lastCreatedLink, preset);
-      }
-    }
   });
 
   game.hudElements.restartButton.addEventListener('click', () => game.restart());

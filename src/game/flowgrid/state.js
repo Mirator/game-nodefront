@@ -85,7 +85,6 @@ export function resetState(game) {
   game.links.clear();
   game.outgoingByNode.clear();
   game.incomingByNode.clear();
-  game.lastCreatedLink = null;
   game.pointer = createPointerState();
   game.accumulator = 0;
   game.lastTimestamp = performance.now();
