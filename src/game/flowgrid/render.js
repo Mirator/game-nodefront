@@ -11,7 +11,7 @@ export function render(game) {
   const ctx = game.ctx;
   const pointer = game.pointer;
   ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
-  ctx.fillStyle = '#f6f3ef';
+  ctx.fillStyle = '#f3f1ec';
   ctx.fillRect(0, 0, game.canvas.width, game.canvas.height);
 
   if (game.aiControllers && game.aiControllers.size > 0) {
@@ -29,8 +29,8 @@ export function render(game) {
         const previewX = source.x + (target.x - source.x) * elapsed;
         const previewY = source.y + (target.y - source.y) * elapsed;
 
-        ctx.lineWidth = 2.5;
-        ctx.strokeStyle = hexToRgba(color, 0.35);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = hexToRgba(color, 0.4);
         ctx.setLineDash([4, 10]);
         ctx.lineDashOffset = 0;
         ctx.beginPath();
@@ -39,7 +39,7 @@ export function render(game) {
         ctx.stroke();
 
         if (elapsed < 1) {
-          ctx.strokeStyle = hexToRgba(color, 0.15);
+          ctx.strokeStyle = hexToRgba(color, 0.18);
           ctx.beginPath();
           ctx.moveTo(previewX, previewY);
           ctx.lineTo(target.x, target.y);
@@ -59,12 +59,12 @@ export function render(game) {
     const endX = source.x + (target.x - source.x) * ratio;
     const endY = source.y + (target.y - source.y) * ratio;
     const normalizedRate = link.maxRate > 0 ? clamp(link.smoothedRate / link.maxRate, 0, 1) : 0;
-    const thickness = 2 + (link.establishing ? 0 : normalizedRate * 6);
+    const thickness = 6 + (link.establishing ? 0 : normalizedRate * 4);
     ctx.save();
     ctx.lineWidth = thickness;
     ctx.lineCap = 'round';
     if (link.establishing) {
-      ctx.strokeStyle = hexToRgba(color, 0.75);
+      ctx.strokeStyle = hexToRgba(color, 0.6);
       ctx.setLineDash(LINK_BUILD_DASH_PATTERN);
       ctx.lineDashOffset = 0;
     } else {
@@ -102,7 +102,7 @@ export function render(game) {
     const originNode = pointer.isDragging && pointer.dragSource ? pointer.dragSource : pointerShakeSource;
     if (originNode) {
       const time = game.elapsedTime ?? 0;
-      let strokeStyle = '#64748b';
+      let strokeStyle = '#94a3b8';
       let lineWidth = 2;
       let dash = [6, 6];
       let dashOffset = 0;
@@ -116,7 +116,7 @@ export function render(game) {
         pointerX += Math.sin(time * 80) * amplitude;
         pointerY += Math.cos(time * 90) * amplitude;
         strokeStyle = '#ef4444';
-        lineWidth = 2 + Math.max(1, amplitude * 0.4);
+        lineWidth = 3 + Math.max(0.5, amplitude * 0.35);
         dash = [4, 8];
         dashOffset = Math.sin(time * 160) * 6 * pointerShakeRatio;
       }
@@ -142,86 +142,41 @@ export function render(game) {
     const flashRatio =
       node.flashDuration > 0 ? clamp(node.flashTimer / node.flashDuration, 0, 1) : 0;
     const baseScale = node.radius / 23;
-    const outlinePadding = Math.max(4, Math.round(5 * baseScale));
-    const ringOffset = Math.max(1, Math.round(2 * baseScale));
-    const innerInset = Math.max(3, Math.round(4 * baseScale));
-    const energyInset = Math.max(innerInset + 2, Math.round(node.radius * 0.45));
-    const ringLineWidth = Math.max(4, Math.round(node.radius * 0.22));
-    const energyLineWidth = Math.max(ringLineWidth + 1, Math.round(node.radius * 0.28));
-    const hoverRingLineWidth = ringLineWidth + 1;
-    const hoverEnergyLineWidth = energyLineWidth + 1;
-
-    const outerRadius = node.radius + outlinePadding;
-    const ringRadius = node.radius + ringOffset;
-    const innerFillRadius = Math.max(2, node.radius - innerInset);
-    const energyRadius = Math.max(node.radius - energyInset, node.radius * 0.58);
+    const ringLineWidth = Math.max(5, Math.round(node.radius * 0.32));
+    const hoverRingLineWidth = ringLineWidth + 2;
+    const ringRadius = Math.max(6, node.radius - ringLineWidth * 0.5);
+    const innerFillRadius = Math.max(2, ringRadius - ringLineWidth * 0.65);
+    const energyRadius = ringRadius;
     const energyRatio = clamp(node.energy / node.capacity, 0, 1);
 
     if (flashRatio > 0) {
-      const pulse = 0.5 + Math.sin((game.elapsedTime ?? 0) * 18) * 0.5;
-      const glowStrength = flashRatio * pulse;
+      const pulse = 0.6 + Math.sin((game.elapsedTime ?? 0) * 18) * 0.4;
+      const haloRadius = ringRadius + ringLineWidth;
       ctx.save();
-      ctx.strokeStyle = hexToRgba('#f97316', 0.35 + 0.45 * glowStrength);
-      ctx.lineWidth = Math.max(ringLineWidth + 3, Math.round(ringLineWidth * (1.25 + glowStrength * 0.6)));
-      ctx.shadowColor = hexToRgba('#f97316', 0.6 * flashRatio);
-      ctx.shadowBlur = 12 * flashRatio;
+      ctx.strokeStyle = hexToRgba(color, 0.25 + flashRatio * 0.35);
+      ctx.lineWidth = ringLineWidth * (1.1 + pulse * 0.15 * flashRatio);
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.arc(node.x, node.y, ringRadius + outlinePadding * 0.5, 0, Math.PI * 2);
+      ctx.arc(node.x, node.y, haloRadius, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
 
-    ctx.save();
-    const shadowAlpha = hover ? 0.18 : 0.12;
-    ctx.shadowColor = hexToRgba('#0f172a', shadowAlpha);
-    ctx.shadowBlur = hover ? 14 : 10;
-    ctx.shadowOffsetY = hover ? 3 : 2;
-    ctx.fillStyle = '#f6f3ef';
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, outerRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    const ringAlpha = hover ? 0.9 : 0.75;
-    const flashBoost = flashRatio > 0 ? 0.2 * flashRatio : 0;
-    ctx.strokeStyle = hexToRgba(color, Math.min(1, ringAlpha + flashBoost));
-    ctx.lineWidth = hover ? hoverRingLineWidth : ringLineWidth;
-    ctx.lineCap = 'round';
+    ctx.fillStyle = '#fdfbf5';
     ctx.beginPath();
     ctx.arc(node.x, node.y, ringRadius, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.fillStyle = '#f6f3ef';
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, innerFillRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    const highlightRadius = Math.max(2, innerFillRadius - Math.max(1, Math.round(baseScale * 2)));
-    const highlight = ctx.createRadialGradient(
-      node.x - innerFillRadius * 0.35,
-      node.y - innerFillRadius * 0.35,
-      Math.max(1, innerFillRadius * 0.05),
-      node.x,
-      node.y,
-      highlightRadius,
-    );
-    highlight.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-    highlight.addColorStop(0.55, 'rgba(255, 255, 255, 0.35)');
-    highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, highlightRadius, 0, Math.PI * 2);
-    ctx.fillStyle = highlight;
-    ctx.fill();
-
-    const energyBaseAlpha = 0.22 + flashBoost * 0.45;
-    ctx.strokeStyle = hexToRgba(color, energyBaseAlpha);
-    ctx.lineWidth = hover ? hoverEnergyLineWidth : energyLineWidth;
+    const ringAlpha = 0.28 + flashRatio * 0.25 + (hover ? 0.14 : 0);
+    ctx.strokeStyle = hexToRgba(color, ringAlpha);
+    ctx.lineWidth = hover ? hoverRingLineWidth : ringLineWidth;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.arc(node.x, node.y, energyRadius, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.strokeStyle = color;
-    ctx.lineWidth = hover ? hoverEnergyLineWidth : energyLineWidth;
+    ctx.lineWidth = hover ? hoverRingLineWidth : ringLineWidth;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.arc(
@@ -233,16 +188,24 @@ export function render(game) {
     );
     ctx.stroke();
 
-    const fontSize = Math.round(clamp(node.radius * 0.9, 13, 28));
-    const strokeWidth = Math.max(2, Math.round(fontSize * 0.18));
-    ctx.font = `700 ${fontSize}px Inter, sans-serif`;
+    ctx.fillStyle = '#f3f1ec';
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, innerFillRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    const centerMarkRadius = Math.max(3, innerFillRadius - Math.max(1, Math.round(baseScale * 4)));
+    if (centerMarkRadius > 2) {
+      ctx.fillStyle = hexToRgba(color, 0.18 + (hover ? 0.12 : 0));
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, centerMarkRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const fontSize = Math.round(clamp(node.radius * 0.72, 10, 22));
+    ctx.font = `600 ${fontSize}px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = strokeWidth;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.strokeText(String(Math.round(node.energy)), node.x, node.y);
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#1f2933';
     ctx.fillText(String(Math.round(node.energy)), node.x, node.y);
 
     ctx.restore();
