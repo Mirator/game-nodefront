@@ -8,12 +8,15 @@ import {
 } from '../constants.js';
 import { clamp } from '../math.js';
 import { captureNode } from './victory.js';
+import { processAiActionQueue } from './ai.js';
 
 /**
  * @param {FlowgridGame} game
  * @param {number} dt
  */
 export function update(game, dt) {
+  game.elapsedTime += dt;
+
   if (game.aiNodeAttackCooldown.size > 0) {
     for (const [nodeId, remaining] of [...game.aiNodeAttackCooldown.entries()]) {
       const updated = remaining - dt;
@@ -24,6 +27,8 @@ export function update(game, dt) {
       }
     }
   }
+
+  processAiActionQueue(game);
 
   const regenMultiplier = game.config.regenRateMultiplier ?? 1;
   for (const node of game.nodes.values()) {

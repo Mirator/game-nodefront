@@ -13,6 +13,13 @@ export const AI_STRATEGIES = {
       turnInterval: 0.4,
       initialDelay: 0.5,
       nodeAttackDelay: 1,
+      actionBudget: {
+        total: 1,
+      },
+      latency: {
+        min: 0.4,
+        max: 0.8,
+      },
     },
   },
   'aggressive-simple': {
@@ -23,6 +30,13 @@ export const AI_STRATEGIES = {
       turnInterval: 0.3,
       initialDelay: 0.45,
       nodeAttackDelay: 0.75,
+      actionBudget: {
+        total: 2,
+      },
+      latency: {
+        min: 0.2,
+        max: 0.55,
+      },
     },
   },
   'slow-simple': {
@@ -32,7 +46,14 @@ export const AI_STRATEGIES = {
     timing: {
       turnInterval: 1.8,
       initialDelay: 2.4,
-      nodeAttackDelay: 3.2,
+      nodeAttackDelay: 1.5,
+      actionBudget: {
+        total: 1,
+      },
+      latency: {
+        min: 0.9,
+        max: 1.5,
+      },
     },
   },
 };

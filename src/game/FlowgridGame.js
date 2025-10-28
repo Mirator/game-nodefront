@@ -12,6 +12,7 @@ import {
   getAiStrategyId as getAiStrategyIdImpl,
   getAiStrategyLabel as getAiStrategyLabelImpl,
   setAiStrategy as setAiStrategyImpl,
+  queueAiLink as queueAiLinkImpl,
 } from './flowgrid/ai.js';
 import { registerInputHandlers } from './flowgrid/input.js';
 import { applyLevel as applyLevelImpl, loadLevel as loadLevelImpl, resetState as resetStateImpl } from './flowgrid/state.js';
@@ -84,6 +85,9 @@ export class FlowgridGame {
 
     this.maxFrameDelta =
       typeof config.maxFrameDelta === 'number' ? config.maxFrameDelta : DEFAULT_MAX_FRAME_DELTA;
+
+    /** @type {number} */
+    this.elapsedTime = 0;
 
     initializeAiState(this);
 
@@ -186,6 +190,10 @@ export class FlowgridGame {
 
   createLink(sourceId, targetId) {
     createLinkImpl(this, sourceId, targetId);
+  }
+
+  queueAiLink(sourceId, targetId, options) {
+    return queueAiLinkImpl(this, sourceId, targetId, options);
   }
 
   applySharePreset(link, fraction) {

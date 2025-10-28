@@ -18,6 +18,40 @@ export function render(game) {
   ctx.fillStyle = '#f6f3ef';
   ctx.fillRect(0, 0, game.canvas.width, game.canvas.height);
 
+  if (game.aiActionQueue && game.aiActionQueue.length > 0) {
+    const now = game.elapsedTime ?? 0;
+    ctx.save();
+    for (const action of game.aiActionQueue) {
+      if (action.type !== 'createLink') continue;
+      const source = game.nodes.get(action.sourceId);
+      const target = game.nodes.get(action.targetId);
+      if (!source || !target) continue;
+      const color = FACTION_COLORS[source.owner] ?? FACTION_COLORS.ai;
+      const duration = Math.max(action.executeAt - action.createdAt, 0.001);
+      const elapsed = clamp((now - action.createdAt) / duration, 0, 1);
+      const previewX = source.x + (target.x - source.x) * elapsed;
+      const previewY = source.y + (target.y - source.y) * elapsed;
+
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = hexToRgba(color, 0.35);
+      ctx.setLineDash([4, 10]);
+      ctx.lineDashOffset = 0;
+      ctx.beginPath();
+      ctx.moveTo(source.x, source.y);
+      ctx.lineTo(previewX, previewY);
+      ctx.stroke();
+
+      if (elapsed < 1) {
+        ctx.strokeStyle = hexToRgba(color, 0.15);
+        ctx.beginPath();
+        ctx.moveTo(previewX, previewY);
+        ctx.lineTo(target.x, target.y);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   for (const link of game.links.values()) {
     const source = game.nodes.get(link.sourceId);
     const target = game.nodes.get(link.targetId);

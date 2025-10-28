@@ -66,6 +66,10 @@ export function resetState(game) {
   game.winner = null;
   game.aiCooldown = game.aiInitialDelay;
   game.aiNodeAttackCooldown.clear();
+  game.aiActionQueue.length = 0;
+  game.aiActionSequence = 0;
+  game.elapsedTime = 0;
+  game.aiTurnBudget = null;
 
   for (const definition of game.initialLevel.nodes) {
     const type = definition.type ?? DEFAULT_NODE_TYPE;
