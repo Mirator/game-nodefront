@@ -95,6 +95,6 @@ export function neutralSimple(game) {
       continue;
     }
 
-    game.createLink(source.id, bestTarget.id);
+    game.queueAiLink(source.id, bestTarget.id);
   }
 }
