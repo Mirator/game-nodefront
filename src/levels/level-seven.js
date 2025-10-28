@@ -5,6 +5,7 @@ export const levelSeven = {
   width: 1280,
   height: 720,
   seed: 7070,
+  aiStrategyId: 'neutral-simple',
   nodes: [
     { id: 'n1', type: 'large', x: 200, y: 360, owner: 'player', energy: 160 },
     { id: 'n2', type: 'medium', x: 320, y: 240, owner: 'player', energy: 100 },

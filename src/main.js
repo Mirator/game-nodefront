@@ -39,24 +39,14 @@ newGameButton.className = 'top-controls__button';
 newGameButton.textContent = 'New Game';
 controlsBar.appendChild(newGameButton);
 
-const aiControls = document.createElement('div');
-aiControls.className = 'ai-controls';
-container.appendChild(aiControls);
-
-const aiLabel = document.createElement('label');
-aiLabel.className = 'ai-controls__label';
-aiLabel.textContent = 'AI Strategy';
-aiLabel.htmlFor = 'ai-strategy-select';
-aiControls.appendChild(aiLabel);
-
-const aiSelect = document.createElement('select');
-aiSelect.id = 'ai-strategy-select';
-aiSelect.name = 'ai-strategy-select';
-aiControls.appendChild(aiSelect);
-
 const prompt = document.createElement('div');
 prompt.className = 'prompt';
 container.appendChild(prompt);
+
+const aiFootnote = document.createElement('div');
+aiFootnote.className = 'ai-footnote';
+aiFootnote.style.display = 'none';
+container.appendChild(aiFootnote);
 
 const endScreen = document.createElement('div');
 endScreen.className = 'end-screen';
@@ -224,17 +214,18 @@ const game = new FlowgridGame(
 
 game.start();
 
-for (const strategy of game.getAvailableStrategies()) {
-  const option = document.createElement('option');
-  option.value = strategy.id;
-  option.textContent = strategy.label;
-  aiSelect.appendChild(option);
-}
+const updateAiFootnote = () => {
+  const label = game.getAiStrategyLabel();
+  if (label) {
+    aiFootnote.textContent = `AI Strategy: ${label}`;
+    aiFootnote.style.display = 'block';
+  } else {
+    aiFootnote.textContent = '';
+    aiFootnote.style.display = 'none';
+  }
+};
 
-aiSelect.value = game.getAiStrategyId();
-aiSelect.addEventListener('change', () => {
-  game.setAiStrategy(aiSelect.value);
-});
+updateAiFootnote();
 
 let resumeAfterMenu = false;
 let wasPausedBeforeMenu = false;
@@ -280,6 +271,7 @@ menuForm.addEventListener('submit', (event) => {
   currentLevelId = selectedLevel.id;
   levelManager.setCurrentLevel(selectedLevel.id);
   game.loadLevel(selectedLevel);
+  updateAiFootnote();
   if (!game.isRunning()) {
     game.start();
   }

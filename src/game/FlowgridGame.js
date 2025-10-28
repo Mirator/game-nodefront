@@ -10,6 +10,7 @@ import {
   trimAiLinksIfWeak as trimAiLinksIfWeakImpl,
   getAvailableStrategies as getAvailableStrategiesImpl,
   getAiStrategyId as getAiStrategyIdImpl,
+  getAiStrategyLabel as getAiStrategyLabelImpl,
   setAiStrategy as setAiStrategyImpl,
 } from './flowgrid/ai.js';
 import { registerInputHandlers } from './flowgrid/input.js';
@@ -126,6 +127,7 @@ export class FlowgridGame {
 
   applyLevel(level) {
     applyLevelImpl(this, level);
+    this.setAiStrategy(level?.aiStrategyId, { silent: true });
   }
 
   loadLevel(level) {
@@ -237,9 +239,17 @@ export class FlowgridGame {
   }
 
   /**
-   * @param {string} id
+   * @returns {string}
    */
-  setAiStrategy(id) {
-    setAiStrategyImpl(this, id);
+  getAiStrategyLabel() {
+    return getAiStrategyLabelImpl(this);
+  }
+
+  /**
+   * @param {string | undefined} id
+   * @param {{ silent?: boolean }} [options]
+   */
+  setAiStrategy(id, options) {
+    setAiStrategyImpl(this, id, options);
   }
 }

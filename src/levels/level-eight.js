@@ -5,6 +5,7 @@ export const levelEight = {
   width: 1280,
   height: 720,
   seed: 8080,
+  aiStrategyId: 'aggressive-simple',
   nodes: [
     { id: 'n1', type: 'large', x: 180, y: 360, owner: 'player', energy: 160 },
     { id: 'n2', type: 'medium', x: 300, y: 240, owner: 'player', energy: 100 },

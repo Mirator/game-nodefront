@@ -1,34 +1,68 @@
 /** @typedef {import('../FlowgridGame.js').FlowgridGame} FlowgridGame */
 import { DEFAULT_STRATEGY_ID, getStrategy, getStrategyList } from '../ai/index.js';
 
+function resolveStrategyTiming(game, strategy) {
+  const { aiTurnInterval, aiInitialDelay, aiNodeAttackDelay } = game.config;
+  const timing = strategy.timing ?? {};
+
+  const resolvedTurnInterval =
+    typeof timing.turnInterval === 'number' && Number.isFinite(timing.turnInterval) && timing.turnInterval > 0
+      ? timing.turnInterval
+      : typeof aiTurnInterval === 'number' && Number.isFinite(aiTurnInterval) && aiTurnInterval > 0
+        ? aiTurnInterval
+        : 0.35;
+
+  const resolvedInitialDelay =
+    typeof timing.initialDelay === 'number' && Number.isFinite(timing.initialDelay) && timing.initialDelay >= 0
+      ? timing.initialDelay
+      : typeof aiInitialDelay === 'number' && Number.isFinite(aiInitialDelay) && aiInitialDelay >= 0
+        ? aiInitialDelay
+        : resolvedTurnInterval;
+
+  const resolvedNodeAttackDelay =
+    typeof timing.nodeAttackDelay === 'number' && Number.isFinite(timing.nodeAttackDelay) && timing.nodeAttackDelay >= 0
+      ? timing.nodeAttackDelay
+      : typeof aiNodeAttackDelay === 'number' && Number.isFinite(aiNodeAttackDelay) && aiNodeAttackDelay >= 0
+        ? aiNodeAttackDelay
+        : 1;
+
+  return {
+    turnInterval: resolvedTurnInterval,
+    initialDelay: resolvedInitialDelay,
+    nodeAttackDelay: resolvedNodeAttackDelay,
+  };
+}
+
+function applyStrategy(game, strategy, { silent = false } = {}) {
+  game.aiStrategy = strategy;
+  game.aiStrategyId = strategy.id;
+
+  const { turnInterval, initialDelay, nodeAttackDelay } = resolveStrategyTiming(game, strategy);
+  game.aiTurnInterval = turnInterval;
+  game.aiInitialDelay = initialDelay;
+  game.aiNodeAttackDelay = nodeAttackDelay;
+
+  if (game.aiNodeAttackCooldown) {
+    for (const nodeId of game.aiNodeAttackCooldown.keys()) {
+      game.aiNodeAttackCooldown.set(nodeId, nodeAttackDelay);
+    }
+  }
+
+  game.aiCooldown = game.aiInitialDelay;
+
+  if (!silent) {
+    game.showTemporaryPrompt(`AI strategy: ${strategy.label}`, 'normal', 1800);
+  }
+}
+
 /**
  * @param {FlowgridGame} game
  */
 export function initializeAiState(game) {
   game.availableStrategies = getStrategyList();
   const defaultStrategy = getStrategy(DEFAULT_STRATEGY_ID);
-  game.aiStrategy = defaultStrategy;
-  game.aiStrategyId = defaultStrategy.id;
-
-  game.aiTurnInterval =
-    typeof game.config.aiTurnInterval === 'number' &&
-    Number.isFinite(game.config.aiTurnInterval) &&
-    game.config.aiTurnInterval > 0
-      ? game.config.aiTurnInterval
-      : 0.35;
-  game.aiInitialDelay =
-    typeof game.config.aiInitialDelay === 'number' &&
-    Number.isFinite(game.config.aiInitialDelay) &&
-    game.config.aiInitialDelay >= 0
-      ? game.config.aiInitialDelay
-      : game.aiTurnInterval;
-  game.aiNodeAttackDelay =
-    typeof game.config.aiNodeAttackDelay === 'number' &&
-    Number.isFinite(game.config.aiNodeAttackDelay) &&
-    game.config.aiNodeAttackDelay >= 0
-      ? game.config.aiNodeAttackDelay
-      : 1;
   game.aiNodeAttackCooldown = new Map();
+  applyStrategy(game, defaultStrategy, { silent: true });
   game.aiCooldown = game.aiInitialDelay;
 }
 
@@ -83,9 +117,15 @@ export function getAiStrategyId(game) {
  * @param {FlowgridGame} game
  * @param {string} id
  */
-export function setAiStrategy(game, id) {
+export function setAiStrategy(game, id, options = {}) {
   const strategy = getStrategy(id);
-  game.aiStrategy = strategy;
-  game.aiStrategyId = strategy.id;
-  game.showTemporaryPrompt(`AI strategy: ${strategy.label}`, 'normal', 1800);
+  applyStrategy(game, strategy, options);
+}
+
+/**
+ * @param {FlowgridGame} game
+ * @returns {string}
+ */
+export function getAiStrategyLabel(game) {
+  return game.aiStrategy ? game.aiStrategy.label : '';
 }

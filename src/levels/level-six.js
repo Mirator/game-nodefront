@@ -5,6 +5,7 @@ export const levelSix = {
   width: 1280,
   height: 720,
   seed: 6060,
+  aiStrategyId: 'neutral-simple',
   nodes: [
     { id: 'n1', type: 'large', x: 200, y: 360, owner: 'player', energy: 155 },
     { id: 'n2', type: 'medium', x: 320, y: 260, owner: 'player', energy: 95 },

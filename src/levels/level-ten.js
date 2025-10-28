@@ -5,6 +5,7 @@ export const levelTen = {
   width: 1280,
   height: 720,
   seed: 10010,
+  aiStrategyId: 'aggressive-simple',
   nodes: [
     { id: 'n1', type: 'large', x: 160, y: 360, owner: 'player', energy: 170 },
     { id: 'n2', type: 'medium', x: 280, y: 240, owner: 'player', energy: 110 },

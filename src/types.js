@@ -27,6 +27,7 @@
  * @property {number} height
  * @property {Array<NodeDefinition>} nodes
  * @property {number} [seed]
+ * @property {string} [aiStrategyId]
  */
 
 /**
