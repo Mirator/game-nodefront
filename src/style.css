@@ -304,11 +304,8 @@ canvas {
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
   border: 1px solid rgba(148, 163, 184, 0.25);
   color: rgba(15, 23, 42, 0.82);
-  --menu-level-base-size: clamp(80px, 20vw, 96px);
-  --menu-level-bubble-size: clamp(52px, calc(var(--menu-level-base-size) * 0.62), 70px);
-  --menu-level-grid-min: calc(var(--menu-level-bubble-size) + 28px);
-  --menu-level-gap: clamp(14px, calc(var(--menu-level-bubble-size) / 2.8), 26px);
-  --menu-level-number: clamp(16px, calc(var(--menu-level-bubble-size) / 2.6), 26px);
+  --menu-level-min-width: clamp(140px, 22vw, 180px);
+  --menu-level-gap: clamp(12px, 3vw, 20px);
 }
 
 .menu h2 {
@@ -335,7 +332,7 @@ canvas {
 
 .menu__level-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(var(--menu-level-grid-min), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(var(--menu-level-min-width), 1fr));
   gap: var(--menu-level-gap);
 }
 
@@ -344,124 +341,94 @@ canvas {
   background: none;
   padding: 0;
   margin: 0;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  width: 100%;
   color: inherit;
   font: inherit;
   cursor: pointer;
-  text-align: center;
-  isolation: isolate;
+  text-align: left;
   touch-action: manipulation;
-  transition: transform 0.2s ease;
 }
 
 .menu__level-button:focus-visible {
   outline: none;
 }
 
-.menu__level-bubble {
-  position: relative;
-  width: var(--menu-level-bubble-size);
-  aspect-ratio: 1 / 1;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: var(--menu-level-number);
+.menu__level-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(30, 41, 59, 0.78);
+  min-height: 92px;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.menu__level-number {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.08em;
-  color: rgba(30, 41, 59, 0.78);
-  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.95), rgba(248, 245, 241, 0.9));
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.6), 0 12px 18px rgba(15, 23, 42, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease,
-    background 0.25s ease;
+  color: rgba(30, 41, 59, 0.55);
 }
 
-.menu__level-bubble::before {
-  content: '';
-  position: absolute;
-  inset: 14%;
-  border-radius: 50%;
-  border: 2px solid rgba(37, 99, 235, 0.22);
-  transition: border-color 0.2s ease, transform 0.2s ease;
+.menu__level-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
 }
 
-.menu__level-bubble::after {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 2px solid rgba(37, 99, 235, 0.3);
-  opacity: 0;
-  transform: scale(0.95);
-  transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-}
-
-.menu__level-button:not(.menu__level-button--locked):hover .menu__level-bubble,
-.menu__level-button:not(.menu__level-button--locked):focus-visible .menu__level-bubble {
-  transform: translateY(-2px);
-  border-color: rgba(37, 99, 235, 0.55);
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.7), 0 18px 26px rgba(37, 99, 235, 0.18);
-}
-
-.menu__level-button:not(.menu__level-button--locked):hover .menu__level-bubble::before,
-.menu__level-button:not(.menu__level-button--locked):focus-visible .menu__level-bubble::before {
-  border-color: rgba(37, 99, 235, 0.38);
-  transform: scale(0.97);
-}
-
-.menu__level-button:focus-visible .menu__level-bubble::after {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.menu__level-button:not(.menu__level-button--locked):active .menu__level-bubble {
-  transform: translateY(0);
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.55), 0 12px 18px rgba(37, 99, 235, 0.14);
-}
-
-.menu__level-button--selected .menu__level-bubble {
-  color: #ffffff;
-  background: radial-gradient(circle at 30% 25%, rgba(37, 99, 235, 0.95), rgba(29, 78, 216, 0.85));
-  border-color: rgba(37, 99, 235, 0.85);
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.18), 0 20px 28px rgba(37, 99, 235, 0.35);
-}
-
-.menu__level-button--selected .menu__level-bubble::before {
-  border-color: rgba(255, 255, 255, 0.65);
-  transform: scale(0.92);
-}
-
-.menu__level-button--selected .menu__level-bubble::after {
-  opacity: 1;
-  transform: scale(1.05);
+.menu__level-button:not(.menu__level-button--locked):hover .menu__level-card,
+.menu__level-button:not(.menu__level-button--locked):focus-visible .menu__level-card {
   border-color: rgba(37, 99, 235, 0.45);
+  background: #ffffff;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.menu__level-button:focus-visible .menu__level-card {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22), 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+.menu__level-button--selected .menu__level-card {
+  background: #2563eb;
+  border-color: #1d4ed8;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+  color: #ffffff;
+}
+
+.menu__level-button--selected .menu__level-number {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.menu__level-button--selected .menu__level-name {
+  color: #ffffff;
 }
 
 .menu__level-button--locked {
   cursor: not-allowed;
 }
 
-.menu__level-button--locked .menu__level-bubble {
-  color: rgba(71, 85, 105, 0.74);
-  background: radial-gradient(circle at 30% 25%, rgba(226, 232, 240, 0.92), rgba(203, 213, 225, 0.88));
-  border: 1px dashed rgba(148, 163, 184, 0.6);
+.menu__level-button--locked .menu__level-card {
+  color: rgba(71, 85, 105, 0.78);
+  border-style: dashed;
+  border-color: rgba(148, 163, 184, 0.55);
+  background: rgba(226, 232, 240, 0.6);
   box-shadow: none;
+  transform: none;
 }
 
-.menu__level-button--locked .menu__level-bubble::before {
-  border-color: rgba(148, 163, 184, 0.6);
+.menu__level-button--locked .menu__level-number {
+  color: rgba(100, 116, 139, 0.7);
 }
 
-.menu__level-button--locked .menu__level-bubble::after {
-  display: none;
-}
-
-.menu__level-button--locked .menu__level-caption {
-  color: rgba(71, 85, 105, 0.72);
+.menu__level-button--locked .menu__level-name {
+  color: rgba(100, 116, 139, 0.85);
 }
 
 .menu__actions {
