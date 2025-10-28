@@ -6,10 +6,15 @@ export const levelTwo = {
   height: 720,
   seed: 2077,
   aiStrategyId: 'slow-simple',
+  initialEnergy: {
+    player: { large: 140 },
+    neutral: { small: 55 },
+    ai: { small: 65 },
+  },
   nodes: [
-    { id: 'n1', type: 'large', x: 280, y: 360, owner: 'player', energy: 140 },
-    { id: 'n2', type: 'small', x: 540, y: 280, owner: 'neutral', energy: 55 },
-    { id: 'n3', type: 'small', x: 540, y: 440, owner: 'neutral', energy: 55 },
-    { id: 'n4', type: 'small', x: 940, y: 360, owner: 'ai', energy: 65 },
+    { id: 'n1', type: 'large', x: 280, y: 360, owner: 'player' },
+    { id: 'n2', type: 'small', x: 540, y: 280, owner: 'neutral' },
+    { id: 'n3', type: 'small', x: 540, y: 440, owner: 'neutral' },
+    { id: 'n4', type: 'small', x: 940, y: 360, owner: 'ai' },
   ],
 };

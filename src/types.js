@@ -12,11 +12,29 @@
  * @property {number} x
  * @property {number} y
  * @property {Faction} owner
- * @property {number} energy
+ * @property {number} [energy]
  * @property {NodeTypeId} [type]
  * @property {number} [capacity]
  * @property {number} [regen]
  * @property {number} [radius]
+ */
+
+/**
+ * @typedef {Object} OwnerEnergyConfig
+ * @property {number} [default]
+ * @property {number} [small]
+ * @property {number} [medium]
+ * @property {number} [large]
+ */
+
+/**
+ * @typedef {Object} LevelEnergyConfig
+ * @property {number} [default]
+ * @property {Partial<Record<NodeTypeId, number>>} [defaults]
+ * @property {OwnerEnergyConfig} [player]
+ * @property {OwnerEnergyConfig} [ai]
+ * @property {OwnerEnergyConfig} [neutral]
+ * @property {Record<string, number>} [overrides]
  */
 
 /**
@@ -25,9 +43,10 @@
  * @property {string} name
  * @property {number} width
  * @property {number} height
- * @property {Array<NodeDefinition>} nodes
- * @property {number} [seed]
- * @property {string} [aiStrategyId]
+  * @property {Array<NodeDefinition>} nodes
+  * @property {number} [seed]
+  * @property {string} [aiStrategyId]
+ * @property {LevelEnergyConfig} [initialEnergy]
  */
 
 /**
