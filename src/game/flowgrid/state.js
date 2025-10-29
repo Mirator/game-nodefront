@@ -9,6 +9,38 @@ import { isAiFaction } from '../constants.js';
 import { prepareAiControllersForLevel } from './ai.js';
 
 /**
+ * @param {FlowgridGame} game
+ * @param {LevelDefinition} level
+ */
+function updateCanvasDisplaySize(game, level) {
+  const { canvas } = game;
+  if (!canvas || !level) {
+    return;
+  }
+
+  const container = canvas.parentElement;
+  if (!(container instanceof HTMLElement)) {
+    canvas.style.width = `${level.width}px`;
+    canvas.style.height = `${level.height}px`;
+    return;
+  }
+
+  const { clientWidth, clientHeight } = container;
+  if (clientWidth <= 0 || clientHeight <= 0) {
+    canvas.style.width = `${level.width}px`;
+    canvas.style.height = `${level.height}px`;
+    return;
+  }
+
+  const scale = Math.min(clientWidth / level.width, clientHeight / level.height, 1);
+  const displayWidth = level.width * scale;
+  const displayHeight = level.height * scale;
+
+  canvas.style.width = `${displayWidth}px`;
+  canvas.style.height = `${displayHeight}px`;
+}
+
+/**
  * @param {LevelDefinition} level
  * @param {import('../../types.js').NodeDefinition} definition
  * @param {{capacity: number}} typeConfig
@@ -43,6 +75,19 @@ export function applyLevel(game, level) {
   game.initialLevel = level;
   game.canvas.width = level.width;
   game.canvas.height = level.height;
+
+  if (typeof window !== 'undefined') {
+    if (game._handleResize) {
+      window.removeEventListener('resize', game._handleResize);
+    }
+
+    const handleResize = () => updateCanvasDisplaySize(game, level);
+    game._handleResize = handleResize;
+    window.addEventListener('resize', handleResize);
+  }
+
+  updateCanvasDisplaySize(game, level);
+
   if (level.name) {
     game.hudElements.title.textContent = `Flowgrid — ${level.name}`;
   } else {
