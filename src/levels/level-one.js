@@ -8,7 +8,7 @@ export const levelOne = {
   aiStrategyId: 'slow-simple',
   initialEnergy: {
     player: { large: 150 },
-    'ai-red': { large: 110 },
+    'ai-red': { large: 60 },
   },
   nodes: [
     { id: 'n1', type: 'large', x: 420, y: 450, owner: 'player' },
