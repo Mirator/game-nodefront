@@ -2,6 +2,7 @@ import { FlowgridGame } from './game/index.js';
 import { levelManager } from './levels/index.js';
 import { createHud } from './ui/hud.js';
 import { createMenu } from './ui/menu.js';
+import { createLevelEditor } from './ui/level-editor.js';
 import { storage } from './utils/storage.js';
 
 const STORAGE_KEYS = {
@@ -17,6 +18,8 @@ if (!app) {
 
 const hud = createHud(app);
 const menu = createMenu(hud.container);
+const levelEditor = createLevelEditor(hud.container);
+menu.setGodModeEnabled(false);
 
 const rawProgress = storage.get(STORAGE_KEYS.PROGRESS, null);
 const progressFromStorage =
@@ -43,6 +46,7 @@ if (!fallbackLevel) {
 
 let currentLevelId = fallbackLevel.id;
 let isGodModeEnabled = false;
+let reopenMenuAfterEditor = false;
 
 let shouldPersistInitialOptions = false;
 const rawOptions = storage.get(STORAGE_KEYS.OPTIONS, null);
@@ -201,9 +205,13 @@ const setGodModeEnabled = (enabled) => {
   isGodModeEnabled = enabled;
   if (!isGodModeEnabled) {
     ensureCurrentLevelPlayable();
+    if (levelEditor.isOpen()) {
+      levelEditor.close();
+    }
   }
   hud.setGodModeIndicator(isGodModeEnabled);
   updateMenuLevels();
+  menu.setGodModeEnabled(isGodModeEnabled);
 };
 
 window.addEventListener('keydown', (event) => {
@@ -256,6 +264,26 @@ const openMenu = ({ resumeOnClose = true } = {}) => {
   menu.open();
 };
 
+const openLevelEditor = () => {
+  reopenMenuAfterEditor = menu.isOpen();
+  const selectedLevelId = menu.getSelectedLevelId() || currentLevelId;
+  const sourceLevel =
+    levelManager.getLevelById(selectedLevelId) ??
+    levelManager.getLevelById(currentLevelId) ??
+    levelManager.getCurrentLevel() ??
+    levelManager.getDefaultLevel() ?? {
+      id: 'custom-level',
+      name: 'Custom Level',
+      width: 1500,
+      height: 900,
+      nodes: [],
+    };
+  levelEditor.loadLevel(sourceLevel);
+  closeMenu({ resume: false });
+  game.pause(false);
+  levelEditor.open();
+};
+
 hud.newGameButton.addEventListener('click', () => {
   openMenu({ resumeOnClose: true });
 });
@@ -291,6 +319,20 @@ hud.nextLevelButton.addEventListener('click', () => {
   }
   hud.endScreen.style.display = 'none';
   openMenu({ resumeOnClose: false });
+});
+
+menu.levelEditorButton.addEventListener('click', () => {
+  if (!isGodModeEnabled) {
+    return;
+  }
+  openLevelEditor();
+});
+
+levelEditor.setOnClose(() => {
+  if (reopenMenuAfterEditor) {
+    reopenMenuAfterEditor = false;
+    openMenu({ resumeOnClose: false });
+  }
 });
 
 // Allow the player to choose their starting level immediately.
