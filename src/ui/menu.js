@@ -37,6 +37,13 @@ export function createMenu(root) {
   menuActions.className = 'menu__actions';
   form.appendChild(menuActions);
 
+  const levelEditorButton = document.createElement('button');
+  levelEditorButton.type = 'button';
+  levelEditorButton.className = 'menu__editor';
+  levelEditorButton.textContent = 'Level Editor';
+  levelEditorButton.hidden = true;
+  menuActions.appendChild(levelEditorButton);
+
   const cancelButton = document.createElement('button');
   cancelButton.type = 'button';
   cancelButton.className = 'menu__cancel';
@@ -195,9 +202,14 @@ export function createMenu(root) {
     onLevelSelected = handler;
   };
 
+  const setGodModeEnabled = (enabled) => {
+    levelEditorButton.hidden = !enabled;
+  };
+
   return {
     overlay,
     form,
+    levelEditorButton,
     cancelButton,
     startButton,
     open,
@@ -208,5 +220,6 @@ export function createMenu(root) {
     setCurrentLevel,
     getNextLevelId,
     setOnLevelSelected,
+    setGodModeEnabled,
   };
 }
