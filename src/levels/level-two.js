@@ -12,8 +12,8 @@ export const levelTwo = {
     'ai-red': { large: 120 },
   },
   nodes: [
-    { id: 'n1', type: 'large', x: 360, y: 450, owner: 'player' },
+    { id: 'n1', type: 'large', x: 520, y: 450, owner: 'player' },
     { id: 'n2', type: 'small', x: 750, y: 450, owner: 'neutral' },
-    { id: 'n3', type: 'large', x: 1120, y: 450, owner: 'ai-red' },
+    { id: 'n3', type: 'large', x: 980, y: 450, owner: 'ai-red' },
   ],
 };
