@@ -90,6 +90,9 @@ export class FlowgridGame {
     /** @type {((faction: Faction) => void) | null} */
     this.winnerListener = null;
 
+    /** @type {(() => void) | null} */
+    this._handleResize = null;
+
     /** @type {number} */
     this.randomSeed = 0;
     /** @type {{ next: () => number }} */
