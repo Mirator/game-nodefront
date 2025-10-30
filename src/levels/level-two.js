@@ -7,9 +7,9 @@ export const levelTwo = {
   seed: 5129,
   aiStrategyId: 'slow-simple',
   initialEnergy: {
-    player: { large: 150 },
+    player: { large: 100 },
     neutral: { small: 40 },
-    'ai-red': { large: 120 },
+    'ai-red': { large: 50 },
   },
   nodes: [
     { id: 'n1', type: 'large', x: 520, y: 450, owner: 'player' },
