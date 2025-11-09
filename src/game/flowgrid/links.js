@@ -9,6 +9,7 @@ const LINK_FAILURE_MESSAGES = {
   duplicate: 'Route already exists.',
   self: "Can't route to the same node.",
   maxRoutes: 'Node is at max routes.',
+  blocked: 'Path is blocked.',
 };
 
 const NODE_FLASH_DURATION = 0.6;
@@ -114,6 +115,20 @@ export function createLink(game, sourceId, targetId) {
   if (game.links.has(`${sourceId}->${targetId}`)) {
     signalLinkFailure(game, source, 'duplicate');
     return;
+  }
+
+  const isAttack = source.owner !== target.owner;
+  if (isAttack) {
+    for (const node of game.nodes.values()) {
+      if (node.id === sourceId || node.id === targetId) {
+        continue;
+      }
+      const dist = distanceToSegment(node.x, node.y, source.x, source.y, target.x, target.y);
+      if (dist < node.radius) {
+        signalLinkFailure(game, source, 'blocked');
+        return;
+      }
+    }
   }
 
   const length = distance(source.x, source.y, target.x, target.y);
