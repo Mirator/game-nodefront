@@ -108,8 +108,18 @@ export class FlowgridGame {
 
     initializeAiState(this);
 
-    /** @type {string} */
-    this.legendKey = '';
+    /**
+     * Cache the last rendered energy summary so we can avoid touching the DOM
+     * if nothing has changed or if we're updating too frequently.
+     */
+    this.energySummaryCache = {
+      totals: { player: 0, 'ai-red': 0, 'ai-purple': 0, neutral: 0 },
+      totalEnergy: 0,
+      visibleKey: '',
+      chartBackground: '',
+    };
+    this.energySummaryThrottleMs = 100;
+    this.lastEnergySummaryUpdate = 0;
 
     this.loop = (timestamp) => {
       const rawDelta = (timestamp - this.lastTimestamp) / 1000;
@@ -153,14 +163,14 @@ export class FlowgridGame {
 
   loadLevel(level) {
     loadLevelImpl(this, level);
-    this.updateEnergySummary();
+    this.updateEnergySummary(true);
   }
 
   resetState() {
     resetStateImpl(this);
     this.accumulator = 0;
     this.lastTimestamp = 0;
-    this.updateEnergySummary();
+    this.updateEnergySummary(true);
   }
 
   clearPromptTimeout() {
@@ -258,9 +268,14 @@ export class FlowgridGame {
     this.updateEnergySummary();
   }
 
-  updateEnergySummary() {
+  updateEnergySummary(force = false) {
     const { energyValues, energyChart, energyTotal, legend } = this.hudElements;
     if (!energyValues) {
+      return;
+    }
+
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (!force && now - this.lastEnergySummaryUpdate < this.energySummaryThrottleMs) {
       return;
     }
 
@@ -281,59 +296,80 @@ export class FlowgridGame {
     const visibleFactions = [];
     for (const faction of factions) {
       const shouldShow = faction === 'player' || hasNodes[faction];
-      const valueElement = energyValues[faction];
-      if (valueElement) {
-        valueElement.textContent = String(Math.round(totals[faction] ?? 0));
-        const entryElement = valueElement.parentElement;
-        if (entryElement) {
-          if (entryElement.hidden === shouldShow) {
-            entryElement.hidden = !shouldShow;
-          }
-        }
-      }
       if (shouldShow) {
         visibleFactions.push(faction);
       }
     }
 
     const totalEnergy = factions.reduce((sum, faction) => sum + (totals[faction] ?? 0), 0);
-    if (energyTotal) {
+    const visibleKey = visibleFactions.join('|');
+    let chartBackground = 'conic-gradient(#e2e8f0 0deg 360deg)';
+
+    if (totalEnergy > 0) {
+      let startAngle = 0;
+      const segments = [];
+      for (const faction of factions) {
+        const value = totals[faction] ?? 0;
+        if (value <= 0) {
+          continue;
+        }
+
+        const angle = (value / totalEnergy) * 360;
+        const endAngle = startAngle + angle;
+        const color = ENERGY_CHART_COLORS[faction] ?? '#e2e8f0';
+        segments.push(`${color} ${startAngle}deg ${endAngle}deg`);
+        startAngle = endAngle;
+      }
+      chartBackground = `conic-gradient(${segments.join(', ')})`;
+    }
+
+    const cache = this.energySummaryCache;
+    this.lastEnergySummaryUpdate = now;
+    const totalsChanged = factions.some((faction) => cache.totals[faction] !== totals[faction]);
+    const visibilityChanged = cache.visibleKey !== visibleKey;
+    const totalEnergyChanged = cache.totalEnergy !== totalEnergy;
+    const chartChanged = cache.chartBackground !== chartBackground;
+
+    if (!force && !totalsChanged && !visibilityChanged && !totalEnergyChanged && !chartChanged) {
+      return;
+    }
+
+    for (const faction of factions) {
+      const shouldShow = faction === 'player' || hasNodes[faction];
+      const valueElement = energyValues[faction];
+      if (valueElement) {
+        if (cache.totals[faction] !== totals[faction]) {
+          valueElement.textContent = String(Math.round(totals[faction] ?? 0));
+        }
+        const entryElement = valueElement.parentElement;
+        if (entryElement && entryElement.hidden === shouldShow) {
+          entryElement.hidden = !shouldShow;
+        }
+      }
+    }
+
+    if (energyTotal && (force || totalEnergyChanged)) {
       energyTotal.textContent = String(Math.round(totalEnergy));
     }
 
-    if (energyChart) {
-      if (totalEnergy > 0) {
-        let startAngle = 0;
-        const segments = [];
-        for (const faction of factions) {
-          const value = totals[faction] ?? 0;
-          if (value <= 0) {
-            continue;
-          }
-
-          const angle = (value / totalEnergy) * 360;
-          const endAngle = startAngle + angle;
-          const color = ENERGY_CHART_COLORS[faction] ?? '#e2e8f0';
-          segments.push(`${color} ${startAngle}deg ${endAngle}deg`);
-          startAngle = endAngle;
-        }
-        energyChart.style.background = `conic-gradient(${segments.join(', ')})`;
-      } else {
-        energyChart.style.background = 'conic-gradient(#e2e8f0 0deg 360deg)';
-      }
+    if (energyChart && (force || chartChanged)) {
+      energyChart.style.background = chartBackground;
     }
 
-    if (legend) {
-      const legendKey = visibleFactions.join('|');
-      if (legendKey !== this.legendKey) {
-        this.legendKey = legendKey;
-        legend.innerHTML = visibleFactions
-          .map((faction) => {
-            const label = FACTION_LABELS[faction] ?? faction;
-            return `<span class="${faction}">${label}</span>`;
-          })
-          .join('');
-      }
+    if (legend && (force || visibilityChanged)) {
+      legend.innerHTML = visibleFactions
+        .map((faction) => {
+          const label = FACTION_LABELS[faction] ?? faction;
+          return `<span class="${faction}">${label}</span>`;
+        })
+        .join('');
+    }
+
+    cache.visibleKey = visibleKey;
+    cache.totalEnergy = totalEnergy;
+    cache.chartBackground = chartBackground;
+    for (const faction of factions) {
+      cache.totals[faction] = totals[faction] ?? 0;
     }
   }
 
